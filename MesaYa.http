@@ -1,0 +1,6 @@
+@MesaYa_HostAddress = http://localhost:5039
+
+GET {{MesaYa_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
