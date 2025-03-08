@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1706.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MesaYa", "MesaYa.csproj", "{02000C69-48C2-4BD3-9FC9-20393E3DFFB8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{02000C69-48C2-4BD3-9FC9-20393E3DFFB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02000C69-48C2-4BD3-9FC9-20393E3DFFB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02000C69-48C2-4BD3-9FC9-20393E3DFFB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02000C69-48C2-4BD3-9FC9-20393E3DFFB8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2CE317B6-81C6-4DC0-8E5F-262BD2A90A24}
+	EndGlobalSection
+EndGlobal
