@@ -15,7 +15,6 @@ namespace MesaYa.Models
 
         [Required, MaxLength(255)]
         public string PasswordHash { get; set; }
-
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public bool IsDeleted { get; set; } = false;
