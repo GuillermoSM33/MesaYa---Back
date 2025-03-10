@@ -7,9 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Cargamos las variables de entorno desde .env
 Env.Load();
 
-Console.WriteLine($"JWT_SECRET desde .env: {Environment.GetEnvironmentVariable("JWT_SECRET")}");
-
-
 // Recurrimos a los servicios registrados en ServiceRegistration
 builder.Services.AddApplicationServices(builder.Configuration);
 
