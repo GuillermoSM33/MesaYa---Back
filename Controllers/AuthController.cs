@@ -34,7 +34,9 @@ namespace MesaYa.Controllers
                 return Unauthorized(new { message = "Credenciales inválidas" });
             }
 
-            var token = _authService.GenerateJWTToken(user.Email, user.Username);
+            var role = user.UsuarioAsRoles.FirstOrDefault()?.Role?.RoleName ?? "User";
+
+            var token = _authService.GenerateJWTToken(user.Email, user.Username, role);
             return Ok(new { token });
         }
     }
