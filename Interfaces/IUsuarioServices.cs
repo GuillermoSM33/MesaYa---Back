@@ -6,5 +6,8 @@ namespace MesaYa.Interfaces
     {
         Usuario GetUserById(int id);
         void CreateUser(Usuario usuario);
+        Usuario RegisterUser(Usuario usuario);
+        string HashPassword(string password);
+        bool EmailExists(string email);
     }
 }

@@ -1,19 +1,28 @@
 using MesaYa.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using DotNetEnv;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Cargamos las variables de entorno desde .env
+Env.Load();
+
+// Recurrimos a los servicios registrados en ServiceRegistration
 builder.Services.AddApplicationServices(builder.Configuration);
 
-builder.Services.AddControllers();
+// Configuramos JSON para evitar ciclos de referencia
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configuración del pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -21,7 +30,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication(); // Autenticación con JWT
 app.UseAuthorization();
 
 app.MapControllers();
