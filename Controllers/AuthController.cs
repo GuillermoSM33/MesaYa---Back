@@ -59,14 +59,12 @@ namespace MesaYa.Controllers
                 return Unauthorized(new { message = "Credenciales inválidas." });
             }
 
-            if (user.UsuarioAsRoles == null)
+            if (user.UsuarioAsRoles == null || !user.UsuarioAsRoles.Any())
             {
-                Console.WriteLine("Usuario encontrado, pero UsuarioAsRoles es null");
+                return Unauthorized(new { message = "El usuario no tiene roles asignados." });
             }
 
-            var role = user.UsuarioAsRoles?.FirstOrDefault()?.Role?.RoleName ?? "User";
-
-            Console.WriteLine($"Usuario autenticado: {user.Email}, Role asignado: {role}");
+            var role = user.UsuarioAsRoles.FirstOrDefault()?.Role?.RoleName ?? "User";
 
             var token = _authService.GenerateJWTToken(user.Email, user.Username, role);
 
