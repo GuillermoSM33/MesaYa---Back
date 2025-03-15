@@ -11,6 +11,7 @@ namespace MesaYa.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<UsuarioAsRole> UsuarioAsRoles { get; set; }
+        public DbSet<Mesa> Mesa { get; set; }
         public DbSet<Reserva> Reservas { get; set; }
         public DbSet<MenuCategoria> MenuCategorias { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
@@ -63,14 +64,16 @@ namespace MesaYa.Data
             modelBuilder.Entity<Usuario>().HasData(
                 new Usuario { UsuarioId = 1, Username = "Guillermo Garcia Canul", Email = "guillermo.jesus.garcia.canul@gmail.com", PasswordHash = "hash1", CreatedAt = baseDate, IsDeleted = false },
                 new Usuario { UsuarioId = 2, Username = "Alisson Alexandra Medina Canche", Email = "alissonmedcan@gmail.com", PasswordHash = "hash2", CreatedAt = baseDate, IsDeleted = false },
-                new Usuario { UsuarioId = 3, Username = "Aysha Garcia Medina", Email = "ayshagama@gmail.com", PasswordHash = "hash3", CreatedAt = baseDate, IsDeleted = false }
-            );
+                new Usuario { UsuarioId = 3, Username = "Aysha Garcia Medina", Email = "ayshagama@gmail.com", PasswordHash = "hash3", CreatedAt = baseDate, IsDeleted = false },
+                new Usuario { UsuarioId = 4, Username= "Lionel Andres Messi", Email="lionel@gmail.com", PasswordHash = "hash4", CreatedAt = baseDate, IsDeleted = false }
+                );
 
             // Seed para UsuarioAsRoles: se asigna un rol a cada usuario
             modelBuilder.Entity<UsuarioAsRole>().HasData(
                 new UsuarioAsRole { UsuarioId = 1, RoleId = 1 },
                 new UsuarioAsRole { UsuarioId = 2, RoleId = 3 },
-                new UsuarioAsRole { UsuarioId = 3, RoleId = 2 }
+                new UsuarioAsRole { UsuarioId = 3, RoleId = 2 },
+                new UsuarioAsRole { UsuarioId = 4, RoleId = 3 }
             );
 
             // Seed para Reservas: 3 registros con diferentes fechas de reserva

@@ -12,6 +12,9 @@ namespace MesaYa.Models
         public int UsuarioId { get; set; }
         public Usuario Usuario { get; set; }
 
+        [ForeignKey("Mesa")]
+        public int MesaId { get; set; }
+        public Mesa Mesa { get; set; }
         [Required]
         public DateTime FechaReserva { get; set; }
 
