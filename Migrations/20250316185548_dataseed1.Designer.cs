@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MesaYa.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250309011027_secondMigration")]
-    partial class secondMigration
+    [Migration("20250316185548_dataseed1")]
+    partial class dataseed1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -347,6 +347,65 @@ namespace MesaYa.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MesaYa.Models.Mesa", b =>
+                {
+                    b.Property<int>("MesaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MesaId"));
+
+                    b.Property<int>("Capacidad")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Disponible")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MesaNumero")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RestauranteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MesaId");
+
+                    b.HasIndex("RestauranteId");
+
+                    b.ToTable("Mesa");
+
+                    b.HasData(
+                        new
+                        {
+                            MesaId = 1,
+                            Capacidad = 4,
+                            Disponible = true,
+                            IsDeleted = false,
+                            MesaNumero = 0,
+                            RestauranteId = 1
+                        },
+                        new
+                        {
+                            MesaId = 2,
+                            Capacidad = 6,
+                            Disponible = true,
+                            IsDeleted = false,
+                            MesaNumero = 0,
+                            RestauranteId = 2
+                        },
+                        new
+                        {
+                            MesaId = 3,
+                            Capacidad = 2,
+                            Disponible = true,
+                            IsDeleted = false,
+                            MesaNumero = 0,
+                            RestauranteId = 2
+                        });
+                });
+
             modelBuilder.Entity("MesaYa.Models.Notificacion", b =>
                 {
                     b.Property<int>("NotificacionId")
@@ -435,6 +494,9 @@ namespace MesaYa.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("MesaId")
+                        .HasColumnType("int");
+
                     b.Property<int>("NumeroPersonas")
                         .HasColumnType("int");
 
@@ -442,6 +504,8 @@ namespace MesaYa.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("ReservaId");
+
+                    b.HasIndex("MesaId");
 
                     b.HasIndex("UsuarioId");
 
@@ -455,6 +519,7 @@ namespace MesaYa.Migrations
                             Estado = "pendiente",
                             FechaReserva = new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
+                            MesaId = 1,
                             NumeroPersonas = 2,
                             UsuarioId = 1
                         },
@@ -465,6 +530,7 @@ namespace MesaYa.Migrations
                             Estado = "confirmada",
                             FechaReserva = new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
+                            MesaId = 2,
                             NumeroPersonas = 4,
                             UsuarioId = 2
                         },
@@ -475,8 +541,129 @@ namespace MesaYa.Migrations
                             Estado = "cancelada",
                             FechaReserva = new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
+                            MesaId = 3,
                             NumeroPersonas = 3,
                             UsuarioId = 3
+                        });
+                });
+
+            modelBuilder.Entity("MesaYa.Models.Restaurante", b =>
+                {
+                    b.Property<int>("RestauranteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RestauranteId"));
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Horario")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImagenUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RestauranteNombre")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RestauranteId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Restaurantes");
+
+                    b.HasData(
+                        new
+                        {
+                            RestauranteId = 1,
+                            Descripcion = "Este reastureante sabe bien",
+                            Direccion = "Calle 1",
+                            Horario = "sadsd",
+                            ImagenUrl = "Imagenreal",
+                            IsDeleted = false,
+                            RestauranteNombre = "Restaurante 1",
+                            Telefono = "1234567890",
+                            UsuarioId = 4
+                        },
+                        new
+                        {
+                            RestauranteId = 2,
+                            Descripcion = "Este reastureante sabe bien",
+                            Direccion = "Calle 2",
+                            Horario = "sadsd",
+                            ImagenUrl = "Imagenreal",
+                            IsDeleted = false,
+                            RestauranteNombre = "Restaurante 2",
+                            Telefono = "0987654321",
+                            UsuarioId = 2
+                        });
+                });
+
+            modelBuilder.Entity("MesaYa.Models.Role", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("RoleId");
+
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            Description = "Administrador del sistema",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            Description = "Usuarios Finales",
+                            RoleName = "Usuario"
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            Description = "Encargado de llevar el control del resturante",
+                            RoleName = "Hostess"
                         });
                 });
 
@@ -546,6 +733,15 @@ namespace MesaYa.Migrations
                             IsDeleted = false,
                             PasswordHash = "hash3",
                             Username = "Aysha Garcia Medina"
+                        },
+                        new
+                        {
+                            UsuarioId = 4,
+                            CreatedAt = new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "lionel@gmail.com",
+                            IsDeleted = false,
+                            PasswordHash = "hash4",
+                            Username = "Lionel Andres Messi"
                         });
                 });
 
@@ -578,52 +774,11 @@ namespace MesaYa.Migrations
                         {
                             UsuarioId = 3,
                             RoleId = 2
-                        });
-                });
-
-            modelBuilder.Entity("Restaurante.Models.Role", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("RoleId");
-
-                    b.HasIndex("RoleName")
-                        .IsUnique();
-
-                    b.ToTable("Roles");
-
-                    b.HasData(
-                        new
-                        {
-                            RoleId = 1,
-                            Description = "Administrador del sistema",
-                            RoleName = "Admin"
                         },
                         new
                         {
-                            RoleId = 2,
-                            Description = "Usuarios Finales",
-                            RoleName = "Usuario"
-                        },
-                        new
-                        {
-                            RoleId = 3,
-                            Description = "Encargado de llevar el control del resturante",
-                            RoleName = "Hostess"
+                            UsuarioId = 4,
+                            RoleId = 3
                         });
                 });
 
@@ -647,6 +802,17 @@ namespace MesaYa.Migrations
                     b.Navigation("MenuCategoria");
                 });
 
+            modelBuilder.Entity("MesaYa.Models.Mesa", b =>
+                {
+                    b.HasOne("MesaYa.Models.Restaurante", "Restaurante")
+                        .WithMany()
+                        .HasForeignKey("RestauranteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Restaurante");
+                });
+
             modelBuilder.Entity("MesaYa.Models.Notificacion", b =>
                 {
                     b.HasOne("MesaYa.Models.Usuario", "Usuario")
@@ -660,6 +826,25 @@ namespace MesaYa.Migrations
 
             modelBuilder.Entity("MesaYa.Models.Reserva", b =>
                 {
+                    b.HasOne("MesaYa.Models.Mesa", "Mesa")
+                        .WithMany()
+                        .HasForeignKey("MesaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MesaYa.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Mesa");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("MesaYa.Models.Restaurante", b =>
+                {
                     b.HasOne("MesaYa.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
@@ -671,7 +856,7 @@ namespace MesaYa.Migrations
 
             modelBuilder.Entity("MesaYa.Models.UsuarioAsRole", b =>
                 {
-                    b.HasOne("Restaurante.Models.Role", "Role")
+                    b.HasOne("MesaYa.Models.Role", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)

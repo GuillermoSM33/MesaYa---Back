@@ -1,4 +1,4 @@
-﻿using Restaurante.Models;
+﻿using MesaYa.Models;
 
 namespace MesaYa.Models
 {

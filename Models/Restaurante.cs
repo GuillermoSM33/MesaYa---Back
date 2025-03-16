@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace MesaYa.Models
 {
@@ -12,13 +12,13 @@ namespace MesaYa.Models
         public int UsuarioId { get; set; }
         public Usuario Usuario { get; set; } // Propiedad de navegación
 
-        [Required]
+        [Required, MaxLength(250)]
         public string RestauranteNombre { get; set; }
 
-        [Required]
+        [Required, MaxLength(250)]
         public string Direccion { get; set; }
 
-        [Required]
+        [ MaxLength(20)]
         public string Telefono { get; set; }
 
         public string ImagenUrl { get; set; }
@@ -27,7 +27,6 @@ namespace MesaYa.Models
         public string Horario { get; set; } // Ejemplo: "Mañana" o "Noche"
 
         public string Descripcion { get; set; }
-
 
         public bool IsDeleted { get; set; } = false; // Soft delete
     }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MesaYa.Models;
-using Restaurante.Models;
+
 
 namespace MesaYa.Data
 {
@@ -11,6 +11,7 @@ namespace MesaYa.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<UsuarioAsRole> UsuarioAsRoles { get; set; }
+        public DbSet<Restaurante> Restaurantes { get; set; }
         public DbSet<Mesa> Mesa { get; set; }
         public DbSet<Reserva> Reservas { get; set; }
         public DbSet<MenuCategoria> MenuCategorias { get; set; }
@@ -76,12 +77,7 @@ namespace MesaYa.Data
                 new UsuarioAsRole { UsuarioId = 4, RoleId = 3 }
             );
 
-            // Seed para Reservas: 3 registros con diferentes fechas de reserva
-            modelBuilder.Entity<Reserva>().HasData(
-                new Reserva { ReservaId = 1, UsuarioId = 1, FechaReserva = baseDate.AddDays(1), Estado = "pendiente", NumeroPersonas = 2, CreatedAt = baseDate, IsDeleted = false },
-                new Reserva { ReservaId = 2, UsuarioId = 2, FechaReserva = baseDate.AddDays(2), Estado = "confirmada", NumeroPersonas = 4, CreatedAt = baseDate, IsDeleted = false },
-                new Reserva { ReservaId = 3, UsuarioId = 3, FechaReserva = baseDate.AddDays(3), Estado = "cancelada", NumeroPersonas = 3, CreatedAt = baseDate, IsDeleted = false }
-            );
+       
 
             // Seed para MenuCategorias: 4 registros
             modelBuilder.Entity<MenuCategoria>().HasData(
@@ -89,6 +85,26 @@ namespace MesaYa.Data
                 new MenuCategoria { CategoriaId = 2, Nombre = "Platos Principales" },
                 new MenuCategoria { CategoriaId = 3, Nombre = "Postres" },
                 new MenuCategoria { CategoriaId = 4, Nombre = "Bebidas" }
+            );
+
+            // Seed para Restaurantes: 2 registros
+            modelBuilder.Entity<Restaurante>().HasData(
+                new Restaurante { RestauranteId = 1,UsuarioId = 4, RestauranteNombre = "Restaurante 1", Direccion = "Calle 1", Telefono = "1234567890",ImagenUrl="Imagenreal", Horario="sadsd",Descripcion= "Este reastureante sabe bien", IsDeleted = false },
+                new Restaurante { RestauranteId = 2,UsuarioId = 2, RestauranteNombre = "Restaurante 2", Direccion = "Calle 2", Telefono = "0987654321", ImagenUrl = "Imagenreal", Horario = "sadsd", Descripcion = "Este reastureante sabe bien", IsDeleted = false }
+            );
+
+            //seed para Mesas: 3 registros
+            modelBuilder.Entity<Mesa>().HasData(
+                new Mesa { MesaId = 1, RestauranteId = 1, Capacidad = 4,Disponible= true,  IsDeleted = false },
+                new Mesa { MesaId = 2, RestauranteId = 2, Capacidad = 6, Disponible=true, IsDeleted = false },
+                new Mesa { MesaId = 3, RestauranteId = 2, Capacidad = 2, Disponible = true, IsDeleted = false }
+                );
+
+            // Seed para Reservas: 3 registros con diferentes fechas de reserva
+            modelBuilder.Entity<Reserva>().HasData(
+                new Reserva { ReservaId = 1, UsuarioId = 1, MesaId = 1, FechaReserva = baseDate.AddDays(1), Estado = "pendiente", NumeroPersonas = 2, CreatedAt = baseDate, IsDeleted = false },
+                new Reserva { ReservaId = 2, UsuarioId = 2, MesaId = 2, FechaReserva = baseDate.AddDays(2), Estado = "confirmada", NumeroPersonas = 4, CreatedAt = baseDate, IsDeleted = false },
+                new Reserva { ReservaId = 3, UsuarioId = 3, MesaId = 3, FechaReserva = baseDate.AddDays(3), Estado = "cancelada", NumeroPersonas = 3, CreatedAt = baseDate, IsDeleted = false }
             );
 
             // Seed para MenuItems: 4 registros, cada uno asociado a una categoría
