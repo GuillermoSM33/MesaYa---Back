@@ -4,13 +4,24 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Cargamos las variables de entorno desde .env
+// Cargar variables de entorno desde .env
 Env.Load();
+Console.WriteLine($"JWT_SECRET desde .env: {Environment.GetEnvironmentVariable("JWT_SECRET")}");
 
-// Recurrimos a los servicios registrados en ServiceRegistration
+// Registrar servicios de la aplicaciÃ³n
 builder.Services.AddApplicationServices(builder.Configuration);
 
-// Configuramos JSON para evitar ciclos de referencia
+// Habilitar CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy => policy.WithOrigins("http://localhost:5173") //Se especifica la URL que usamos en el front
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials());
+});
+
+// Configurar JSON para evitar ciclos de referencia
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -22,15 +33,17 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
-// Configuración del pipeline HTTP
+// ConfiguraciÃ³n del pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Aplicar middleware
 app.UseHttpsRedirection();
-app.UseAuthentication(); // Autenticación con JWT
+app.UseCors("AllowFrontend");  // Nos aseguramos que se use CORS antes de Authentication y Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
