@@ -30,13 +30,19 @@ namespace MesaYa.Services
         }
         public Usuario ValidateUser(string email, string password)
         {
-            var user = _context.Usuarios.FirstOrDefault(u => u.Email == email && !u.IsDeleted);
+            var user = _context.Usuarios
+                .Include(u => u.UsuarioAsRoles)  // Declaramos que hay una relación con UsuarioAsRoles
+                .ThenInclude(ur => ur.Role)       // Incluimos la información del Role
+                .FirstOrDefault(u => u.Email == email && !u.IsDeleted);
+
             if (user == null || !VerifyPassword(password, user.PasswordHash))
             {
                 return null;
             }
+
             return user;
         }
+
         public string GenerateJWTToken(string username, string email, string role)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -44,11 +50,11 @@ namespace MesaYa.Services
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, role)
-            };
+        new Claim(JwtRegisteredClaimNames.Sub, username),
+        new Claim(JwtRegisteredClaimNames.Email, email),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim(ClaimTypes.Role, role)  // Aquí ya pasamos el rol real para que se genere bien en el token
+    };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -60,6 +66,7 @@ namespace MesaYa.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
         private bool VerifyPassword(string inputPassword, string storedHash)
         {
             var secretKey = _configuration["Jwt:Key"];
