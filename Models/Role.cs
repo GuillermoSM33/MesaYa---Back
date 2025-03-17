@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Restaurante.Models
+namespace MesaYa.Models
 {
     public class Role
     {
