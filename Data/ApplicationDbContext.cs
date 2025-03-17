@@ -15,6 +15,8 @@ namespace MesaYa.Data
         public DbSet<Mesa> Mesa { get; set; }
         public DbSet<Reserva> Reservas { get; set; }
         public DbSet<MenuCategoria> MenuCategorias { get; set; }
+        public DbSet<ItemAsRestaurante> ItemAsRestaurantes { get; set; }
+        public DbSet<ReservaAsMesa> ReservaAsMesas { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<Notificacion> Notificaciones { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
@@ -50,6 +52,37 @@ namespace MesaYa.Data
             modelBuilder.Entity<MenuItem>()
                 .Property(m => m.Precio)
                 .HasColumnType("decimal(10,2)");
+
+            modelBuilder.Entity<ReservaAsMesa>()
+        .HasKey(rm => new { rm.ReservaId, rm.MesaId });  // Clave compuesta
+
+            // Configurar la relación muchos-a-muchos entre Reserva y Mesa
+            modelBuilder.Entity<ReservaAsMesa>()
+                .HasOne(rm => rm.Reserva)
+                .WithMany(r => r.ReservaAsMesas)
+                .HasForeignKey(rm => rm.ReservaId)
+                .OnDelete(DeleteBehavior.NoAction);  // Cambiar a NO ACTION
+
+            modelBuilder.Entity<ReservaAsMesa>()
+                .HasOne(rm => rm.Mesa)
+                .WithMany(m => m.ReservaAsMesas)
+                .HasForeignKey(rm => rm.MesaId)
+                .OnDelete(DeleteBehavior.Cascade);  // Mantener CASCADE en una sola clave foránea
+
+            modelBuilder.Entity<ItemAsRestaurante>()
+       .HasKey(ir => new { ir.ItemId, ir.RestauranteId });
+
+            modelBuilder.Entity<ItemAsRestaurante>()
+                .HasOne(ir => ir.MenuItem) // Coincide con el nombre en el modelo
+                .WithMany(i => i.ItemAsRestaurantes)
+                .HasForeignKey(ir => ir.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ItemAsRestaurante>()
+                .HasOne(ir => ir.Restaurante)
+                .WithMany(r => r.ItemAsRestaurantes)
+                .HasForeignKey(ir => ir.RestauranteId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Fecha base para el seed data (valor constante para evitar problemas en migraciones)
             var baseDate = new DateTime(2025, 3, 8, 12, 0, 0);

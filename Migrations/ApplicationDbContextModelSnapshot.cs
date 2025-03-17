@@ -216,6 +216,21 @@ namespace MesaYa.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MesaYa.Models.ItemAsRestaurante", b =>
+                {
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RestauranteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ItemId", "RestauranteId");
+
+                    b.HasIndex("RestauranteId");
+
+                    b.ToTable("ItemAsRestaurantes");
+                });
+
             modelBuilder.Entity("MesaYa.Models.MenuCategoria", b =>
                 {
                     b.Property<int>("CategoriaId")
@@ -544,6 +559,21 @@ namespace MesaYa.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MesaYa.Models.ReservaAsMesa", b =>
+                {
+                    b.Property<int>("ReservaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MesaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReservaId", "MesaId");
+
+                    b.HasIndex("MesaId");
+
+                    b.ToTable("ReservaAsMesas");
+                });
+
             modelBuilder.Entity("MesaYa.Models.Restaurante", b =>
                 {
                     b.Property<int>("RestauranteId")
@@ -788,6 +818,25 @@ namespace MesaYa.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("MesaYa.Models.ItemAsRestaurante", b =>
+                {
+                    b.HasOne("MesaYa.Models.MenuItem", "MenuItem")
+                        .WithMany("ItemAsRestaurantes")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MesaYa.Models.Restaurante", "Restaurante")
+                        .WithMany("ItemAsRestaurantes")
+                        .HasForeignKey("RestauranteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MenuItem");
+
+                    b.Navigation("Restaurante");
+                });
+
             modelBuilder.Entity("MesaYa.Models.MenuItem", b =>
                 {
                     b.HasOne("MesaYa.Models.MenuCategoria", "MenuCategoria")
@@ -832,12 +881,31 @@ namespace MesaYa.Migrations
                     b.HasOne("MesaYa.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Mesa");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("MesaYa.Models.ReservaAsMesa", b =>
+                {
+                    b.HasOne("MesaYa.Models.Mesa", "Mesa")
+                        .WithMany("ReservaAsMesas")
+                        .HasForeignKey("MesaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MesaYa.Models.Reserva", "Reserva")
+                        .WithMany("ReservaAsMesas")
+                        .HasForeignKey("ReservaId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Mesa");
+
+                    b.Navigation("Reserva");
                 });
 
             modelBuilder.Entity("MesaYa.Models.Restaurante", b =>
@@ -868,6 +936,26 @@ namespace MesaYa.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("MesaYa.Models.MenuItem", b =>
+                {
+                    b.Navigation("ItemAsRestaurantes");
+                });
+
+            modelBuilder.Entity("MesaYa.Models.Mesa", b =>
+                {
+                    b.Navigation("ReservaAsMesas");
+                });
+
+            modelBuilder.Entity("MesaYa.Models.Reserva", b =>
+                {
+                    b.Navigation("ReservaAsMesas");
+                });
+
+            modelBuilder.Entity("MesaYa.Models.Restaurante", b =>
+                {
+                    b.Navigation("ItemAsRestaurantes");
                 });
 
             modelBuilder.Entity("MesaYa.Models.Usuario", b =>

@@ -19,5 +19,7 @@ namespace MesaYa.Models
         public bool Disponible { get; set; } = false;
 
         public bool IsDeleted { get; set; } = false;
+
+        public ICollection<ReservaAsMesa> ReservaAsMesas { get; set; }
     }
 }

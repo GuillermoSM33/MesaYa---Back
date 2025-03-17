@@ -6,11 +6,10 @@ namespace MesaYa.Models
     {
         [ForeignKey("Reserva")]
         public int ReservaId { get; set; }
-        public Reserva Reserva { get; set; }
+        public Reserva Reserva { get; set; }  // Propiedad de navegación a Reserva
 
-        [ForeignKey("Mesas")]
-
+        [ForeignKey("Mesa")]
         public int MesaId { get; set; }
-        public Mesa Mesas { get; set; }
+        public Mesa Mesa { get; set; }  // Propiedad de navegación a Mesa
     }
 }

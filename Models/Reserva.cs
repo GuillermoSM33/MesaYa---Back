@@ -25,5 +25,8 @@ namespace MesaYa.Models
         public int NumeroPersonas { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsDeleted { get; set; } = false;
+
+
+        public ICollection<ReservaAsMesa> ReservaAsMesas { get; set; } = new List<ReservaAsMesa>();
     }
 }

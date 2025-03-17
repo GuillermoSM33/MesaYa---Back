@@ -29,5 +29,9 @@ namespace MesaYa.Models
         public string Descripcion { get; set; }
 
         public bool IsDeleted { get; set; } = false; // Soft delete
+
+        public ICollection<ItemAsRestaurante> ItemAsRestaurantes { get; set; } = new List<ItemAsRestaurante>();
+
+
     }
 }

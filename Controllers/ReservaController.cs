@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MesaYa.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ReservaController : ControllerBase
     {
         private readonly IReservaService _reservaService;
@@ -13,18 +15,49 @@ namespace MesaYa.Controllers
         }
 
 
-        [HttpPost("reserva")]
-
-        public IActionResult CreateReserva([FromBody] Reserva reserva)
+        [HttpPost]
+        public IActionResult CreateReserva([FromBody] CrearReservaDTO crearReservaDTO)
         {
+            if (!ModelState.IsValid)  // Validar el DTO
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                var nuevaReserva = _reservaService.CreateReserva(reserva);
-                return Ok(nuevaReserva);
+                var reserva = _reservaService.CreateReserva(crearReservaDTO);
+                return Ok(reserva);  // Devuelve la reserva creada
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);  // Devuelve un 404 si la mesa o el usuario no existen
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ex.Message);  // Devuelve un 400 si la reserva no es válida
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
+            }
+        }
+
+
+        [HttpPatch("{reservaId}/cancelar")]
+        public IActionResult CancelarReserva(int reservaId)
+        {
+            try
+            {
+                _reservaService.CancelarReserva(reservaId);  // Llama al servicio para cancelar la reserva
+                return Ok(new { Message = "Reserva cancelada exitosamente." });  // Devuelve un mensaje de éxito
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);  // Devuelve un 404 si la reserva no existe o ya está cancelada
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
             }
         }
 
