@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MesaYa.Models;
-using Restaurante.Models;
+
 
 namespace MesaYa.Data
 {
@@ -11,8 +11,12 @@ namespace MesaYa.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<UsuarioAsRole> UsuarioAsRoles { get; set; }
+        public DbSet<Restaurante> Restaurantes { get; set; }
+        public DbSet<Mesa> Mesa { get; set; }
         public DbSet<Reserva> Reservas { get; set; }
         public DbSet<MenuCategoria> MenuCategorias { get; set; }
+        public DbSet<ItemAsRestaurante> ItemAsRestaurantes { get; set; }
+        public DbSet<ReservaAsMesa> ReservaAsMesas { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<Notificacion> Notificaciones { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
@@ -49,6 +53,37 @@ namespace MesaYa.Data
                 .Property(m => m.Precio)
                 .HasColumnType("decimal(10,2)");
 
+            modelBuilder.Entity<ReservaAsMesa>()
+        .HasKey(rm => new { rm.ReservaId, rm.MesaId });  // Clave compuesta
+
+            // Configurar la relación muchos-a-muchos entre Reserva y Mesa
+            modelBuilder.Entity<ReservaAsMesa>()
+                .HasOne(rm => rm.Reserva)
+                .WithMany(r => r.ReservaAsMesas)
+                .HasForeignKey(rm => rm.ReservaId)
+                .OnDelete(DeleteBehavior.NoAction);  // Cambiar a NO ACTION
+
+            modelBuilder.Entity<ReservaAsMesa>()
+                .HasOne(rm => rm.Mesa)
+                .WithMany(m => m.ReservaAsMesas)
+                .HasForeignKey(rm => rm.MesaId)
+                .OnDelete(DeleteBehavior.Cascade);  // Mantener CASCADE en una sola clave foránea
+
+            modelBuilder.Entity<ItemAsRestaurante>()
+       .HasKey(ir => new { ir.ItemId, ir.RestauranteId });
+
+            modelBuilder.Entity<ItemAsRestaurante>()
+                .HasOne(ir => ir.MenuItem) // Coincide con el nombre en el modelo
+                .WithMany(i => i.ItemAsRestaurantes)
+                .HasForeignKey(ir => ir.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ItemAsRestaurante>()
+                .HasOne(ir => ir.Restaurante)
+                .WithMany(r => r.ItemAsRestaurantes)
+                .HasForeignKey(ir => ir.RestauranteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Fecha base para el seed data (valor constante para evitar problemas en migraciones)
             var baseDate = new DateTime(2025, 3, 8, 12, 0, 0);
 
@@ -63,22 +98,19 @@ namespace MesaYa.Data
             modelBuilder.Entity<Usuario>().HasData(
                 new Usuario { UsuarioId = 1, Username = "Guillermo Garcia Canul", Email = "guillermo.jesus.garcia.canul@gmail.com", PasswordHash = "hash1", CreatedAt = baseDate, IsDeleted = false },
                 new Usuario { UsuarioId = 2, Username = "Alisson Alexandra Medina Canche", Email = "alissonmedcan@gmail.com", PasswordHash = "hash2", CreatedAt = baseDate, IsDeleted = false },
-                new Usuario { UsuarioId = 3, Username = "Aysha Garcia Medina", Email = "ayshagama@gmail.com", PasswordHash = "hash3", CreatedAt = baseDate, IsDeleted = false }
-            );
+                new Usuario { UsuarioId = 3, Username = "Aysha Garcia Medina", Email = "ayshagama@gmail.com", PasswordHash = "hash3", CreatedAt = baseDate, IsDeleted = false },
+                new Usuario { UsuarioId = 4, Username= "Lionel Andres Messi", Email="lionel@gmail.com", PasswordHash = "hash4", CreatedAt = baseDate, IsDeleted = false }
+                );
 
             // Seed para UsuarioAsRoles: se asigna un rol a cada usuario
             modelBuilder.Entity<UsuarioAsRole>().HasData(
                 new UsuarioAsRole { UsuarioId = 1, RoleId = 1 },
                 new UsuarioAsRole { UsuarioId = 2, RoleId = 3 },
-                new UsuarioAsRole { UsuarioId = 3, RoleId = 2 }
+                new UsuarioAsRole { UsuarioId = 3, RoleId = 2 },
+                new UsuarioAsRole { UsuarioId = 4, RoleId = 3 }
             );
 
-            // Seed para Reservas: 3 registros con diferentes fechas de reserva
-            modelBuilder.Entity<Reserva>().HasData(
-                new Reserva { ReservaId = 1, UsuarioId = 1, FechaReserva = baseDate.AddDays(1), Estado = "pendiente", NumeroPersonas = 2, CreatedAt = baseDate, IsDeleted = false },
-                new Reserva { ReservaId = 2, UsuarioId = 2, FechaReserva = baseDate.AddDays(2), Estado = "confirmada", NumeroPersonas = 4, CreatedAt = baseDate, IsDeleted = false },
-                new Reserva { ReservaId = 3, UsuarioId = 3, FechaReserva = baseDate.AddDays(3), Estado = "cancelada", NumeroPersonas = 3, CreatedAt = baseDate, IsDeleted = false }
-            );
+       
 
             // Seed para MenuCategorias: 4 registros
             modelBuilder.Entity<MenuCategoria>().HasData(
@@ -86,6 +118,26 @@ namespace MesaYa.Data
                 new MenuCategoria { CategoriaId = 2, Nombre = "Platos Principales" },
                 new MenuCategoria { CategoriaId = 3, Nombre = "Postres" },
                 new MenuCategoria { CategoriaId = 4, Nombre = "Bebidas" }
+            );
+
+            // Seed para Restaurantes: 2 registros
+            modelBuilder.Entity<Restaurante>().HasData(
+                new Restaurante { RestauranteId = 1,UsuarioId = 4, RestauranteNombre = "Restaurante 1", Direccion = "Calle 1", Telefono = "1234567890",ImagenUrl="Imagenreal", Horario="sadsd",Descripcion= "Este reastureante sabe bien", IsDeleted = false },
+                new Restaurante { RestauranteId = 2,UsuarioId = 2, RestauranteNombre = "Restaurante 2", Direccion = "Calle 2", Telefono = "0987654321", ImagenUrl = "Imagenreal", Horario = "sadsd", Descripcion = "Este reastureante sabe bien", IsDeleted = false }
+            );
+
+            //seed para Mesas: 3 registros
+            modelBuilder.Entity<Mesa>().HasData(
+                new Mesa { MesaId = 1, RestauranteId = 1, Capacidad = 4,Disponible= true,  IsDeleted = false },
+                new Mesa { MesaId = 2, RestauranteId = 2, Capacidad = 6, Disponible=true, IsDeleted = false },
+                new Mesa { MesaId = 3, RestauranteId = 2, Capacidad = 2, Disponible = true, IsDeleted = false }
+                );
+
+            // Seed para Reservas: 3 registros con diferentes fechas de reserva
+            modelBuilder.Entity<Reserva>().HasData(
+                new Reserva { ReservaId = 1, UsuarioId = 1, MesaId = 1, FechaReserva = baseDate.AddDays(1), Estado = "pendiente", NumeroPersonas = 2, CreatedAt = baseDate, IsDeleted = false },
+                new Reserva { ReservaId = 2, UsuarioId = 2, MesaId = 2, FechaReserva = baseDate.AddDays(2), Estado = "confirmada", NumeroPersonas = 4, CreatedAt = baseDate, IsDeleted = false },
+                new Reserva { ReservaId = 3, UsuarioId = 3, MesaId = 3, FechaReserva = baseDate.AddDays(3), Estado = "cancelada", NumeroPersonas = 3, CreatedAt = baseDate, IsDeleted = false }
             );
 
             // Seed para MenuItems: 4 registros, cada uno asociado a una categoría

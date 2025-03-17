@@ -24,5 +24,7 @@ namespace MesaYa.Models
         public string? ImagenUrl { get; set; }
         public bool Disponible { get; set; } = true;
         public bool IsDeleted { get; set; } = false;
+
+        public ICollection<ItemAsRestaurante> ItemAsRestaurantes { get; set; } = new List<ItemAsRestaurante>();
     }
 }

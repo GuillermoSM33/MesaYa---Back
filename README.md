@@ -14,7 +14,7 @@ Guzman Salazar Abelardo Geovani – 22393178
 
 Hernandez Gonzalez Jonathan – 22393180
 
-Lopez Rodriguez Cristian – 22393175
+Lopez Rodriguez Cristian – 22393176
 
 Tuz Carrillo Daniel Alejandro – 22393190
 

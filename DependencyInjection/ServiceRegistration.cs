@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using MesaYa.Models;
 
 namespace MesaYa.DependencyInjection
 {
@@ -44,6 +45,9 @@ namespace MesaYa.DependencyInjection
             // Registrar servicios
             services.AddScoped<IUsuarioServices, UsuarioServices>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IReservaService, ReservaService>();
+            services.AddScoped<IRestauranteService, RestauranteService>();
+            services.AddScoped<IMesaService, MesaService>();
 
             // Configuración de autenticación JWT
             var jwtKey = config["Jwt:Key"];

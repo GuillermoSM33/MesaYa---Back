@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MesaYa.Migrations
 {
     /// <inheritdoc />
-    public partial class FirstMigration : Migration
+    public partial class FixCascadePaths : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -99,7 +99,7 @@ namespace MesaYa.Migrations
                     CategoriaId = table.Column<int>(type: "int", nullable: false),
                     Nombre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Descripcion = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Precio = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Precio = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     ImagenUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Disponible = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
@@ -162,23 +162,25 @@ namespace MesaYa.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reservas",
+                name: "Restaurantes",
                 columns: table => new
                 {
-                    ReservaId = table.Column<int>(type: "int", nullable: false)
+                    RestauranteId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UsuarioId = table.Column<int>(type: "int", nullable: false),
-                    FechaReserva = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Estado = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    NumeroPersonas = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RestauranteNombre = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Direccion = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Telefono = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ImagenUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Horario = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reservas", x => x.ReservaId);
+                    table.PrimaryKey("PK_Restaurantes", x => x.RestauranteId);
                     table.ForeignKey(
-                        name: "FK_Reservas_Usuarios_UsuarioId",
+                        name: "FK_Restaurantes_Usuarios_UsuarioId",
                         column: x => x.UsuarioId,
                         principalTable: "Usuarios",
                         principalColumn: "UsuarioId",
@@ -207,6 +209,107 @@ namespace MesaYa.Migrations
                         principalTable: "Usuarios",
                         principalColumn: "UsuarioId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ItemAsRestaurantes",
+                columns: table => new
+                {
+                    RestauranteId = table.Column<int>(type: "int", nullable: false),
+                    ItemId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ItemAsRestaurantes", x => new { x.ItemId, x.RestauranteId });
+                    table.ForeignKey(
+                        name: "FK_ItemAsRestaurantes_MenuItems_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "MenuItems",
+                        principalColumn: "ItemId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ItemAsRestaurantes_Restaurantes_RestauranteId",
+                        column: x => x.RestauranteId,
+                        principalTable: "Restaurantes",
+                        principalColumn: "RestauranteId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Mesa",
+                columns: table => new
+                {
+                    MesaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    MesaNumero = table.Column<int>(type: "int", nullable: false),
+                    RestauranteId = table.Column<int>(type: "int", nullable: false),
+                    Capacidad = table.Column<int>(type: "int", nullable: false),
+                    Disponible = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Mesa", x => x.MesaId);
+                    table.ForeignKey(
+                        name: "FK_Mesa_Restaurantes_RestauranteId",
+                        column: x => x.RestauranteId,
+                        principalTable: "Restaurantes",
+                        principalColumn: "RestauranteId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reservas",
+                columns: table => new
+                {
+                    ReservaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UsuarioId = table.Column<int>(type: "int", nullable: false),
+                    MesaId = table.Column<int>(type: "int", nullable: false),
+                    FechaReserva = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Estado = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    NumeroPersonas = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reservas", x => x.ReservaId);
+                    table.ForeignKey(
+                        name: "FK_Reservas_Mesa_MesaId",
+                        column: x => x.MesaId,
+                        principalTable: "Mesa",
+                        principalColumn: "MesaId",
+                        onDelete: ReferentialAction.NoAction);
+                    table.ForeignKey(
+                        name: "FK_Reservas_Usuarios_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReservaAsMesas",
+                columns: table => new
+                {
+                    ReservaId = table.Column<int>(type: "int", nullable: false),
+                    MesaId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReservaAsMesas", x => new { x.ReservaId, x.MesaId });
+                    table.ForeignKey(
+                        name: "FK_ReservaAsMesas_Mesa_MesaId",
+                        column: x => x.MesaId,
+                        principalTable: "Mesa",
+                        principalColumn: "MesaId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReservaAsMesas_Reservas_ReservaId",
+                        column: x => x.ReservaId,
+                        principalTable: "Reservas",
+                        principalColumn: "ReservaId");
                 });
 
             migrationBuilder.InsertData(
@@ -259,7 +362,8 @@ namespace MesaYa.Migrations
                 {
                     { 1, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "guillermo.jesus.garcia.canul@gmail.com", false, "hash1", "Guillermo Garcia Canul" },
                     { 2, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "alissonmedcan@gmail.com", false, "hash2", "Alisson Alexandra Medina Canche" },
-                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "ayshagama@gmail.com", false, "hash3", "Aysha Garcia Medina" }
+                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "ayshagama@gmail.com", false, "hash3", "Aysha Garcia Medina" },
+                    { 4, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "lionel@gmail.com", false, "hash4", "Lionel Andres Messi" }
                 });
 
             migrationBuilder.InsertData(
@@ -294,13 +398,12 @@ namespace MesaYa.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "Reservas",
-                columns: new[] { "ReservaId", "CreatedAt", "Estado", "FechaReserva", "IsDeleted", "NumeroPersonas", "UsuarioId" },
+                table: "Restaurantes",
+                columns: new[] { "RestauranteId", "Descripcion", "Direccion", "Horario", "ImagenUrl", "IsDeleted", "RestauranteNombre", "Telefono", "UsuarioId" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "pendiente", new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 2, 1 },
-                    { 2, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "confirmada", new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 4, 2 },
-                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "cancelada", new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 3, 3 }
+                    { 1, "Este reastureante sabe bien", "Calle 1", "sadsd", "Imagenreal", false, "Restaurante 1", "1234567890", 4 },
+                    { 2, "Este reastureante sabe bien", "Calle 2", "sadsd", "Imagenreal", false, "Restaurante 2", "0987654321", 2 }
                 });
 
             migrationBuilder.InsertData(
@@ -310,13 +413,39 @@ namespace MesaYa.Migrations
                 {
                     { 1, 1 },
                     { 3, 2 },
-                    { 2, 3 }
+                    { 2, 3 },
+                    { 3, 4 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Mesa",
+                columns: new[] { "MesaId", "Capacidad", "Disponible", "IsDeleted", "MesaNumero", "RestauranteId" },
+                values: new object[,]
+                {
+                    { 1, 4, true, false, 0, 1 },
+                    { 2, 6, true, false, 0, 2 },
+                    { 3, 2, true, false, 0, 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Reservas",
+                columns: new[] { "ReservaId", "CreatedAt", "Estado", "FechaReserva", "IsDeleted", "MesaId", "NumeroPersonas", "UsuarioId" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "pendiente", new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 1, 2, 1 },
+                    { 2, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "confirmada", new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 2, 4, 2 },
+                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "cancelada", new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 3, 3, 3 }
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Auditorias_UsuarioId",
                 table: "Auditorias",
                 column: "UsuarioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemAsRestaurantes_RestauranteId",
+                table: "ItemAsRestaurantes",
+                column: "RestauranteId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MenuCategorias_Nombre",
@@ -330,13 +459,33 @@ namespace MesaYa.Migrations
                 column: "CategoriaId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Mesa_RestauranteId",
+                table: "Mesa",
+                column: "RestauranteId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Notificaciones_UsuarioId",
                 table: "Notificaciones",
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ReservaAsMesas_MesaId",
+                table: "ReservaAsMesas",
+                column: "MesaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reservas_MesaId",
+                table: "Reservas",
+                column: "MesaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reservas_UsuarioId",
                 table: "Reservas",
+                column: "UsuarioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Restaurantes_UsuarioId",
+                table: "Restaurantes",
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
@@ -376,22 +525,34 @@ namespace MesaYa.Migrations
                 name: "ErroresSistema");
 
             migrationBuilder.DropTable(
-                name: "MenuItems");
+                name: "ItemAsRestaurantes");
 
             migrationBuilder.DropTable(
                 name: "Notificaciones");
 
             migrationBuilder.DropTable(
-                name: "Reservas");
+                name: "ReservaAsMesas");
 
             migrationBuilder.DropTable(
                 name: "UsuarioAsRoles");
 
             migrationBuilder.DropTable(
-                name: "MenuCategorias");
+                name: "MenuItems");
+
+            migrationBuilder.DropTable(
+                name: "Reservas");
 
             migrationBuilder.DropTable(
                 name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "MenuCategorias");
+
+            migrationBuilder.DropTable(
+                name: "Mesa");
+
+            migrationBuilder.DropTable(
+                name: "Restaurantes");
 
             migrationBuilder.DropTable(
                 name: "Usuarios");
