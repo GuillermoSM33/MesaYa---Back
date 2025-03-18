@@ -12,9 +12,6 @@ namespace MesaYa.Models
         public int UsuarioId { get; set; }
         public Usuario Usuario { get; set; }
 
-        [ForeignKey("Mesa")]
-        public int MesaId { get; set; }
-        public Mesa Mesa { get; set; }
         [Required]
         public DateTime FechaReserva { get; set; }
 
@@ -25,7 +22,6 @@ namespace MesaYa.Models
         public int NumeroPersonas { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsDeleted { get; set; } = false;
-
 
         public ICollection<ReservaAsMesa> ReservaAsMesas { get; set; } = new List<ReservaAsMesa>();
     }

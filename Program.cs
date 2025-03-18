@@ -6,10 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Cargar variables de entorno desde .env
 Env.Load();
-Console.WriteLine($"JWT_SECRET desde .env: {Environment.GetEnvironmentVariable("JWT_SECRET")}");
 
 // Registrar servicios de la aplicación
 builder.Services.AddApplicationServices(builder.Configuration);
+
+// Agregar SignalR 
+builder.Services.AddSignalR();
 
 // Habilitar CORS
 builder.Services.AddCors(options =>
@@ -47,5 +49,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+//Mapa de SignalR
+app.MapHub<MesaYa.Hubs.ReservaHub>("/reservaHub");
 
 app.Run();
