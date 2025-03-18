@@ -1,4 +1,5 @@
-﻿using MesaYa.Models;
+﻿using MesaYa.Interfaces;
+using MesaYa.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MesaYa.Controllers
@@ -39,6 +40,31 @@ namespace MesaYa.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
+            }
+        }
+
+        [HttpPost("crear-multiples-mesas")]
+        public async Task<IActionResult> CrearReservaConMultiplesMesas([FromBody] CrearReservaMultiplesMesasDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var reserva = _reservaService.CreateReservaConMultiplesMesas(dto);
+                return Ok(reserva);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
         }
 
