@@ -18,6 +18,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
+builder.Services.AddScoped<ReporteService>();
+
+
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
@@ -29,10 +32,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+Console.WriteLine($"DB_SERVER: {Env.GetString("DB_SERVER")}");
+Console.WriteLine($"DB_DATABASE: {Env.GetString("DB_DATABASE")}");
+Console.WriteLine($"DB_TRUSTED_CONNECTION: {Env.GetString("DB_TRUSTED_CONNECTION")}");
+Console.WriteLine($"JWT_SECRET: {Env.GetString("JWT_SECRET")}");
+
+
 app.UseHttpsRedirection();
 app.UseAuthentication(); // Autenticación con JWT
 app.UseAuthorization();
 
 app.MapControllers();
+
 
 app.Run();
