@@ -45,27 +45,61 @@ public class ReporteService
         .ToList();
     }
 
-    public List<PlatoMasPedidoDTO> GetPlatosMasPedidos(DateTime? fechaInicio, DateTime? fechaFin, string? nombreRestaurante)
-    {
-        var query = _context.ItemAsRestaurantes
-            .Include(i => i.Restaurante)
-            .Include(i => i.MenuItem)
-            .AsQueryable();
+    //public List<PlatoMasPedidoDTO> GetPlatosMasPedidos(DateTime? fechaInicio, DateTime? fechaFin, string? nombreRestaurante)
+    //{
+    //    var query = _context.ItemAsRestaurantes
+    //        .Include(i => i.Restaurante)
+    //        .Include(i => i.MenuItem)
+    //        .AsQueryable();
 
-        if (!string.IsNullOrEmpty(nombreRestaurante))
-        {
-            query = query.Where(i => i.Restaurante.RestauranteNombre.Contains(nombreRestaurante));
-        }
+    //    if (!string.IsNullOrEmpty(nombreRestaurante))
+    //    {
+    //        query = query.Where(i => i.Restaurante.RestauranteNombre.Contains(nombreRestaurante));
+    //    }
+
+    //    return query
+    //        .GroupBy(i => new { i.ItemId, i.MenuItem.Nombre })
+    //        .Select(g => new PlatoMasPedidoDTO
+    //        {
+    //            ItemId = g.Key.ItemId,
+    //            Nombre = g.Key.Nombre,
+    //            TotalPedidos = g.Count()
+    //        })
+    //        .OrderByDescending(p => p.TotalPedidos)
+    //        .ToList();
+    //}
+    public List<PlatoMasPedidoDTO> GetPlatosMasPedidos(DateTime? fechaInicio, DateTime? fechaFin, string? nombreRestaurante)
+{
+    var query = _context.ItemAsRestaurantes
+        .Include(i => i.Restaurante)
+        .Include(i => i.MenuItem)
+        .ThenInclude(m => m.MenuCategoria) // Incluye la categoría
+        .AsQueryable();
+
+    if (!string.IsNullOrEmpty(nombreRestaurante))
+    {
+        query = query.Where(i => i.Restaurante.RestauranteNombre.Contains(nombreRestaurante));
+    }
 
         return query
-            .GroupBy(i => new { i.ItemId, i.MenuItem.Nombre })
-            .Select(g => new PlatoMasPedidoDTO
-            {
-                ItemId = g.Key.ItemId,
-                Nombre = g.Key.Nombre,
-                TotalPedidos = g.Count()
-            })
-            .OrderByDescending(p => p.TotalPedidos)
-            .ToList();
+        .GroupBy(i => new {
+            i.ItemId,
+            NombrePlato = i.MenuItem.Nombre, // Renombrar explícitamente
+            NombreRestaurante = i.Restaurante.RestauranteNombre,
+            NombreCategoria = i.MenuItem.MenuCategoria.Nombre // Renombrar para evitar conflicto
+        })
+        .Select(g => new PlatoMasPedidoDTO
+        {
+            ItemId = g.Key.ItemId,
+            Nombre = g.Key.NombrePlato, // Usar alias definido en GroupBy
+            RestauranteNombre = g.Key.NombreRestaurante,
+            CategoriaNombre = g.Key.NombreCategoria,
+            TotalPedidos = g.Count()
+        })
+        .OrderByDescending(p => p.TotalPedidos)
+        .ToList();
+
+
     }
+
 }
