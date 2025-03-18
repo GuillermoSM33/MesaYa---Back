@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MesaYa.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250318090600_UpdateForRelationship")]
-    partial class UpdateForRelationship
+    [Migration("20250318165540_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -1,6 +1,9 @@
-﻿using MesaYa.Interfaces;
+﻿using System;
+using MesaYa.Data;
+using MesaYa.Interfaces;
 using MesaYa.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MesaYa.Controllers
 {
@@ -9,10 +12,13 @@ namespace MesaYa.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioServices _usuarioServices;
+        private readonly ApplicationDbContext _context;
 
-        public UsuarioController(IUsuarioServices usuarioServices)
+        public UsuarioController(IUsuarioServices usuarioServices, ApplicationDbContext context)
         {
             _usuarioServices = usuarioServices;
+            _context = context;
+
         }
         public class RegisterRequest
         {
@@ -36,7 +42,7 @@ namespace MesaYa.Controllers
             var usuario = new Usuario
             {
                 Email = request.Email,
-                Username = request.Email.Split('@')[0], 
+                Username = request.Email.Split('@')[0],
                 PasswordHash = _usuarioServices.HashPassword(request.Password),
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow
@@ -64,5 +70,25 @@ namespace MesaYa.Controllers
             }
             return Ok(user);
         }
+
+        //Endpoint para obtener a los usuarios con rol de hostess
+
+        [HttpGet("hostess")]
+        public async Task<IActionResult> GetHostessUsers()
+        {
+            try
+            {
+                var hostessUsers = await _context.Usuarios
+                    .Where(u => _context.UsuarioAsRoles.Any(r => r.UsuarioId == u.UsuarioId && r.RoleId == 3))
+                    .ToListAsync();
+
+                return Ok(hostessUsers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }
