@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MesaYa.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250317183348_FixCascadePaths")]
-    partial class FixCascadePaths
+    [Migration("20250318090600_UpdateForRelationship")]
+    partial class UpdateForRelationship
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -509,9 +509,6 @@ namespace MesaYa.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("MesaId")
-                        .HasColumnType("int");
-
                     b.Property<int>("NumeroPersonas")
                         .HasColumnType("int");
 
@@ -519,8 +516,6 @@ namespace MesaYa.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("ReservaId");
-
-                    b.HasIndex("MesaId");
 
                     b.HasIndex("UsuarioId");
 
@@ -534,7 +529,6 @@ namespace MesaYa.Migrations
                             Estado = "pendiente",
                             FechaReserva = new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
-                            MesaId = 1,
                             NumeroPersonas = 2,
                             UsuarioId = 1
                         },
@@ -545,7 +539,6 @@ namespace MesaYa.Migrations
                             Estado = "confirmada",
                             FechaReserva = new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
-                            MesaId = 2,
                             NumeroPersonas = 4,
                             UsuarioId = 2
                         },
@@ -556,7 +549,6 @@ namespace MesaYa.Migrations
                             Estado = "cancelada",
                             FechaReserva = new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
-                            MesaId = 3,
                             NumeroPersonas = 3,
                             UsuarioId = 3
                         });
@@ -875,19 +867,11 @@ namespace MesaYa.Migrations
 
             modelBuilder.Entity("MesaYa.Models.Reserva", b =>
                 {
-                    b.HasOne("MesaYa.Models.Mesa", "Mesa")
-                        .WithMany()
-                        .HasForeignKey("MesaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MesaYa.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
-
-                    b.Navigation("Mesa");
 
                     b.Navigation("Usuario");
                 });
@@ -897,7 +881,7 @@ namespace MesaYa.Migrations
                     b.HasOne("MesaYa.Models.Mesa", "Mesa")
                         .WithMany("ReservaAsMesas")
                         .HasForeignKey("MesaId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("MesaYa.Models.Reserva", "Reserva")

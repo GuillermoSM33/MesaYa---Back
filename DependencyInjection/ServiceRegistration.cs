@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using MesaYa.Models;
+using MesaYa.Hubs;
 
 namespace MesaYa.DependencyInjection
 {
@@ -48,6 +49,9 @@ namespace MesaYa.DependencyInjection
             services.AddScoped<IReservaService, ReservaService>();
             services.AddScoped<IRestauranteService, RestauranteService>();
             services.AddScoped<IMesaService, MesaService>();
+
+            // Agregar el Hub de SignalR
+            services.AddTransient<ReservaHub>();
 
             // Configuración de autenticación JWT
             var jwtKey = config["Jwt:Key"];

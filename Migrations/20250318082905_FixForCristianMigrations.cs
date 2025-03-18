@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MesaYa.Migrations
 {
     /// <inheritdoc />
-    public partial class FixCascadePaths : Migration
+    public partial class FixForCristianMigrations : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -279,14 +279,12 @@ namespace MesaYa.Migrations
                         name: "FK_Reservas_Mesa_MesaId",
                         column: x => x.MesaId,
                         principalTable: "Mesa",
-                        principalColumn: "MesaId",
-                        onDelete: ReferentialAction.NoAction);
+                        principalColumn: "MesaId");
                     table.ForeignKey(
                         name: "FK_Reservas_Usuarios_UsuarioId",
                         column: x => x.UsuarioId,
                         principalTable: "Usuarios",
-                        principalColumn: "UsuarioId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "UsuarioId");
                 });
 
             migrationBuilder.CreateTable(
@@ -303,8 +301,7 @@ namespace MesaYa.Migrations
                         name: "FK_ReservaAsMesas_Mesa_MesaId",
                         column: x => x.MesaId,
                         principalTable: "Mesa",
-                        principalColumn: "MesaId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "MesaId");
                     table.ForeignKey(
                         name: "FK_ReservaAsMesas_Reservas_ReservaId",
                         column: x => x.ReservaId,
