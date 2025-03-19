@@ -31,6 +31,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
+builder.Services.AddScoped<ReporteService>();
+
+
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
