@@ -65,6 +65,25 @@ namespace MesaYa.Controllers
             }
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateRestaurante(int id, [FromBody] UpdateRestauranteDTO updateRestauranteDTO)
+        {
+            try
+            {
+                var restaurante = await _restauranteService.UpdateRestaurante(id, updateRestauranteDTO);
+                return Ok(restaurante);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
 
         [HttpPatch("soft-delete/{id}")]
         public async Task<IActionResult> SoftDeleteRestaurante(int id)

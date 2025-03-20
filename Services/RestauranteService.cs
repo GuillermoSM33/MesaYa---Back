@@ -1,5 +1,4 @@
 ﻿using MesaYa.Data;
-
 using MesaYa.Interfaces;
 using MesaYa.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,32 +13,61 @@ namespace MesaYa.Services
         {
             _context = context;
         }
-        public List<Restaurante> GetRestaurante()
+        //Obtener Restaurantes
+        public List<RestauranteDTO> GetRestaurante()
         {
             try
             {
-                List<Restaurante> result = _context.Restaurantes
-                    .Include(t=>t.Usuario)
+                List<RestauranteDTO> result = _context.Restaurantes
+                    .Include(t => t.Usuario) // Carga la relación con Usuario
+                    .Select(t => new RestauranteDTO
+                    {
+                        Id = t.RestauranteId,
+                        RestauranteNombre = t.RestauranteNombre,
+                        Direccion = t.Direccion,
+                        Telefono = t.Telefono,
+                        Horario = t.Horario,
+                        ImagenUrl = t.ImagenUrl,
+                        Descripcion = t.Descripcion,
+                        UserName = t.Usuario.Username // Aquí traemos el nombre del usuario
+                    })
                     .ToList();
+
                 return result;
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
-
             }
         }
 
-        public async Task<Restaurante> GetRestauranteById(int id)
+
+
+        public async Task<RestauranteDTO> GetRestauranteById(int id)
         {
             var restaurante = await _context.Restaurantes
-     .Include(t => t.Usuario)
-     .FirstOrDefaultAsync(t => t.RestauranteId == id);
+                .Include(t => t.Usuario) // Incluye la relación con Usuario
+                .FirstOrDefaultAsync(t => t.RestauranteId == id);
+
             if (restaurante == null)
             {
                 throw new KeyNotFoundException("El restaurante no existe.");
             }
-            return restaurante;
+
+            // Mapeo de Restaurante a RestauranteDTO
+            var restauranteDTO = new RestauranteDTO
+            {
+                Id = restaurante.RestauranteId,
+                RestauranteNombre = restaurante.RestauranteNombre,
+                Direccion = restaurante.Direccion,
+                Telefono = restaurante.Telefono,
+                Horario = restaurante.Horario,
+                ImagenUrl = restaurante.ImagenUrl,
+                Descripcion = restaurante.Descripcion,
+                UserName = restaurante.Usuario.Username // Devuelve el nombre del usuario
+            };
+
+            return restauranteDTO;
         }
 
         //Crear Restaurante
@@ -86,7 +114,7 @@ namespace MesaYa.Services
                     Horario = restaurante.Horario,
                     ImagenUrl = restaurante.ImagenUrl,
                     Descripcion = restaurante.Descripcion,
-                    UsuarioId = restaurante.UsuarioId
+                    UserName = restaurante.UsuarioId.ToString() // Aquí traemos el nombre del usuario
                 };
 
                 return restauranteDTO;  // Devuelve el DTO
@@ -95,6 +123,55 @@ namespace MesaYa.Services
             {
                 throw new Exception(e.Message);
             }
+        }
+
+
+        public async Task<RestauranteDTO> UpdateRestaurante(int id, UpdateRestauranteDTO updateRestauranteDTO)
+        {
+
+            var restaurante = await _context.Restaurantes
+                .FirstOrDefaultAsync(t => t.RestauranteId == id);
+
+            if (restaurante == null)
+            {
+                throw new KeyNotFoundException("El restaurante no existe.");
+            }
+
+
+            try
+            {
+                restaurante.RestauranteNombre = updateRestauranteDTO.RestauranteNombre;
+                restaurante.Direccion = updateRestauranteDTO.Direccion;
+                restaurante.Telefono = updateRestauranteDTO.Telefono;
+                restaurante.Horario = updateRestauranteDTO.Horario;
+                restaurante.ImagenUrl = updateRestauranteDTO.ImagenUrl;
+                restaurante.Descripcion = updateRestauranteDTO.Descripcion;
+                restaurante.UsuarioId = updateRestauranteDTO.UserId;
+                await _context.SaveChangesAsync();
+                var restauranteDTO = new RestauranteDTO
+                {
+                    Id = restaurante.RestauranteId,
+                    RestauranteNombre = restaurante.RestauranteNombre,
+                    Direccion = restaurante.Direccion,
+                    Telefono = restaurante.Telefono,
+                    Horario = restaurante.Horario,
+                    ImagenUrl = restaurante.ImagenUrl,
+                    Descripcion = restaurante.Descripcion,
+                    UserName = restaurante.UsuarioId.ToString() // Aquí traemos el nombre del usuario
+                };
+                return restauranteDTO;  // Devuelve el DTO
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+
+
+
+
+
+
+            }
+
         }
 
         public async Task<bool> SoftDeleteRestaurante(int id)
