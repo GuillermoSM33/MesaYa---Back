@@ -30,6 +30,23 @@ namespace MesaYa.Controllers
                 return BadRequest(e.Message);
             }
         }
+        
+        [HttpGet("onlytrue")]
+        public IActionResult GetRestaurantesByTrue()
+        {
+            try
+            {
+                var restaurantes = _restauranteService.GetRestaurantesByTrue();
+                return Ok(
+                restaurantes);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+
 
 
         [HttpGet("{id}")]
@@ -83,6 +100,24 @@ namespace MesaYa.Controllers
             }
         }
 
+
+        [HttpPatch("restore/{id}")]
+        public async Task<IActionResult> SoftRestoreRestaurante(int id)
+        {
+            try
+            {
+                var result = await _restauranteService.SoftRestoreRestaurante(id);
+                return Ok(result);  // Devuelve true si se restauró correctamente
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);  // Devuelve un 404 si el restaurante no existe
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
+            }
+        }
 
 
         [HttpPatch("soft-delete/{id}")]

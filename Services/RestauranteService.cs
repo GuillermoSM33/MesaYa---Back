@@ -29,7 +29,8 @@ namespace MesaYa.Services
                         Horario = t.Horario,
                         ImagenUrl = t.ImagenUrl,
                         Descripcion = t.Descripcion,
-                        UserName = t.Usuario.Username // Aquí traemos el nombre del usuario
+                        UserName = t.Usuario.Username, // Aquí traemos el nombre del usuario
+                        IsDeleted = t.IsDeleted
                     })
                     .ToList();
 
@@ -40,6 +41,37 @@ namespace MesaYa.Services
                 throw new Exception(e.Message);
             }
         }
+
+
+        //Obtener Restaurante No eliminados
+       public List<RestauranteDTO> GetRestaurantesByTrue()
+        {
+            try
+            {
+                List<RestauranteDTO> result = _context.Restaurantes
+                    .Include(t => t.Usuario) // Carga la relación con Usuario
+                    .Where(t => t.IsDeleted)
+                    .Select(t => new RestauranteDTO
+                    {
+                        Id = t.RestauranteId,
+                        RestauranteNombre = t.RestauranteNombre,
+                        Direccion = t.Direccion,
+                        Telefono = t.Telefono,
+                        Horario = t.Horario,
+                        ImagenUrl = t.ImagenUrl,
+                        Descripcion = t.Descripcion,
+                        UserName = t.Usuario.Username, // Aquí traemos el nombre del usuario
+                        IsDeleted = t.IsDeleted
+                    })
+                    .ToList();
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
 
 
 
@@ -64,7 +96,8 @@ namespace MesaYa.Services
                 Horario = restaurante.Horario,
                 ImagenUrl = restaurante.ImagenUrl,
                 Descripcion = restaurante.Descripcion,
-                UserName = restaurante.Usuario.Username // Devuelve el nombre del usuario
+                UserName = restaurante.Usuario.Username, // Devuelve el nombre del usuario
+                IsDeleted=restaurante.IsDeleted
             };
 
             return restauranteDTO;
@@ -164,15 +197,32 @@ namespace MesaYa.Services
             catch (Exception e)
             {
                 throw new Exception(e.Message);
-
-
-
-
-
-
             }
 
         }
+
+        
+        public async Task<bool>SoftRestoreRestaurante(int id)
+        {
+            var restaurante = await _context.Restaurantes
+                .FirstOrDefaultAsync(t => t.RestauranteId == id);
+            if (restaurante == null)
+            {
+                throw new KeyNotFoundException("El restaurante no existe.");
+            }
+            try
+            {
+                restaurante.IsDeleted = false;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Error al restaurar el restaurante.", e);
+            }
+        }
+
+
 
         public async Task<bool> SoftDeleteRestaurante(int id)
         {
