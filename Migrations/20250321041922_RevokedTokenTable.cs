@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MesaYa.Migrations
 {
     /// <inheritdoc />
-    public partial class FixForCristianMigrations : Migration
+    public partial class RevokedTokenTable : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -57,6 +57,21 @@ namespace MesaYa.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MenuCategorias", x => x.CategoriaId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RevokedTokens",
+                columns: table => new
+                {
+                    Id_Token = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Jti = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpirationDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RevokedTokens", x => x.Id_Token);
                 });
 
             migrationBuilder.CreateTable(
@@ -162,6 +177,29 @@ namespace MesaYa.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Reservas",
+                columns: table => new
+                {
+                    ReservaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UsuarioId = table.Column<int>(type: "int", nullable: false),
+                    FechaReserva = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Estado = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    NumeroPersonas = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reservas", x => x.ReservaId);
+                    table.ForeignKey(
+                        name: "FK_Reservas_Usuarios_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Restaurantes",
                 columns: table => new
                 {
@@ -256,35 +294,6 @@ namespace MesaYa.Migrations
                         principalTable: "Restaurantes",
                         principalColumn: "RestauranteId",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Reservas",
-                columns: table => new
-                {
-                    ReservaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UsuarioId = table.Column<int>(type: "int", nullable: false),
-                    MesaId = table.Column<int>(type: "int", nullable: false),
-                    FechaReserva = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Estado = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    NumeroPersonas = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reservas", x => x.ReservaId);
-                    table.ForeignKey(
-                        name: "FK_Reservas_Mesa_MesaId",
-                        column: x => x.MesaId,
-                        principalTable: "Mesa",
-                        principalColumn: "MesaId");
-                    table.ForeignKey(
-                        name: "FK_Reservas_Usuarios_UsuarioId",
-                        column: x => x.UsuarioId,
-                        principalTable: "Usuarios",
-                        principalColumn: "UsuarioId");
                 });
 
             migrationBuilder.CreateTable(
@@ -395,6 +404,16 @@ namespace MesaYa.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "Reservas",
+                columns: new[] { "ReservaId", "CreatedAt", "Estado", "FechaReserva", "IsDeleted", "NumeroPersonas", "UsuarioId" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "pendiente", new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 2, 1 },
+                    { 2, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "confirmada", new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 4, 2 },
+                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "cancelada", new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 3, 3 }
+                });
+
+            migrationBuilder.InsertData(
                 table: "Restaurantes",
                 columns: new[] { "RestauranteId", "Descripcion", "Direccion", "Horario", "ImagenUrl", "IsDeleted", "RestauranteNombre", "Telefono", "UsuarioId" },
                 values: new object[,]
@@ -422,16 +441,6 @@ namespace MesaYa.Migrations
                     { 1, 4, true, false, 0, 1 },
                     { 2, 6, true, false, 0, 2 },
                     { 3, 2, true, false, 0, 2 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Reservas",
-                columns: new[] { "ReservaId", "CreatedAt", "Estado", "FechaReserva", "IsDeleted", "MesaId", "NumeroPersonas", "UsuarioId" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "pendiente", new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 1, 2, 1 },
-                    { 2, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "confirmada", new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 2, 4, 2 },
-                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "cancelada", new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 3, 3, 3 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -468,11 +477,6 @@ namespace MesaYa.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ReservaAsMesas_MesaId",
                 table: "ReservaAsMesas",
-                column: "MesaId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reservas_MesaId",
-                table: "Reservas",
                 column: "MesaId");
 
             migrationBuilder.CreateIndex(
@@ -531,10 +535,16 @@ namespace MesaYa.Migrations
                 name: "ReservaAsMesas");
 
             migrationBuilder.DropTable(
+                name: "RevokedTokens");
+
+            migrationBuilder.DropTable(
                 name: "UsuarioAsRoles");
 
             migrationBuilder.DropTable(
                 name: "MenuItems");
+
+            migrationBuilder.DropTable(
+                name: "Mesa");
 
             migrationBuilder.DropTable(
                 name: "Reservas");
@@ -544,9 +554,6 @@ namespace MesaYa.Migrations
 
             migrationBuilder.DropTable(
                 name: "MenuCategorias");
-
-            migrationBuilder.DropTable(
-                name: "Mesa");
 
             migrationBuilder.DropTable(
                 name: "Restaurantes");

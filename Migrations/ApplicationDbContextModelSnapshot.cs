@@ -640,6 +640,29 @@ namespace MesaYa.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MesaYa.Models.RevokedToken", b =>
+                {
+                    b.Property<int>("Id_Token")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id_Token"));
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Jti")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id_Token");
+
+                    b.ToTable("RevokedTokens");
+                });
+
             modelBuilder.Entity("MesaYa.Models.Role", b =>
                 {
                     b.Property<int>("RoleId")
@@ -867,7 +890,7 @@ namespace MesaYa.Migrations
                     b.HasOne("MesaYa.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Usuario");
