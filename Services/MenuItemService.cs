@@ -98,6 +98,85 @@ namespace MesaYa.Services
             return menuItem;
         }
 
+        public List<MenuItemDTO> GetMenusByRestauranteId(int restauranteId)
+        {
+            try
+            {
+                var result = _context.ItemAsRestaurantes
+                    .Where(x => x.RestauranteId == restauranteId)
+                    .Include(x => x.MenuItem)
+                        .ThenInclude(mi => mi.MenuCategoria)
+                    .Select(x => new MenuItemDTO
+                    {
+                        Id = x.MenuItem.ItemId,
+                        NombreItem = x.MenuItem.Nombre,
+                        Descripcion = x.MenuItem.Descripcion,
+                        Precio = x.MenuItem.Precio,
+                        CategoriaNombre = x.MenuItem.MenuCategoria.Nombre,
+                        Imagen = x.MenuItem.ImagenUrl,
+                        Disponible = x.MenuItem.Disponible,
+                        isDeleted = x.MenuItem.IsDeleted
+                    })
+                    .ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener los menús por restaurante: " + ex.Message);
+            }
+        }
+
+        public List<MenuItemDTO> GetMenusActivosByRestauranteId(int restauranteId)
+        {
+            try
+            {
+                var result = _context.ItemAsRestaurantes
+                    .Where(x => x.RestauranteId == restauranteId && !x.MenuItem.IsDeleted)
+                    .Include(x => x.MenuItem)
+                        .ThenInclude(mi => mi.MenuCategoria)
+                    .Select(x => new MenuItemDTO
+                    {
+                        Id = x.MenuItem.ItemId,
+                        NombreItem = x.MenuItem.Nombre,
+                        Descripcion = x.MenuItem.Descripcion,
+                        Precio = x.MenuItem.Precio,
+                        CategoriaNombre = x.MenuItem.MenuCategoria.Nombre,
+                        Imagen = x.MenuItem.ImagenUrl,
+                        Disponible = x.MenuItem.Disponible,
+                        isDeleted = x.MenuItem.IsDeleted
+                    })
+                    .ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error al obtener los menús activos por restaurante: " + ex.Message);
+            }
+        }
+
+        public async Task<bool> RestaurarMenuItem(int id)
+        {
+            var item = await _context.MenuItems.FindAsync(id);
+            if (item == null)
+                throw new KeyNotFoundException("El menú no existe.");
+
+            item.IsDeleted = false;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> SoftDeleteMenuItem(int id)
+        {
+            var item = await _context.MenuItems.FindAsync(id);
+            if (item == null)
+                throw new KeyNotFoundException("El menú no existe.");
+
+            item.IsDeleted = true;
+            await _context.SaveChangesAsync();
+            return true;
+        }
 
 
     }

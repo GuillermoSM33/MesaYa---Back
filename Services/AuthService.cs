@@ -43,18 +43,19 @@ namespace MesaYa.Services
             return user;
         }
 
-        public string GenerateJWTToken(string username, string email, string role)
+        public string GenerateJWTToken(string username, string email, string role, int usuarioId)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-        new Claim(JwtRegisteredClaimNames.Sub, username),
-        new Claim(JwtRegisteredClaimNames.Email, email),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        new Claim(ClaimTypes.Role, role)  // Aquí ya pasamos el rol real para que se genere bien en el token
-    };
+                new Claim(JwtRegisteredClaimNames.Sub, username),
+                new Claim(JwtRegisteredClaimNames.Email, email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Role, role),  // Aquí ya pasamos el rol real para que se genere bien en el token
+                new Claim("usuarioId", usuarioId.ToString()) // Agregamos el usuarioId como una reclamación
+            };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -66,6 +67,7 @@ namespace MesaYa.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
 
         private bool VerifyPassword(string inputPassword, string storedHash)
         {
