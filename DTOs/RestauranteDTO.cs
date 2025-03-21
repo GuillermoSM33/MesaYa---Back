@@ -10,4 +10,5 @@ public class RestauranteDTO
     public string ImagenUrl { get; set; }
     public string Descripcion { get; set; }
     public string UserName { get; set; }
+    public bool IsDeleted { get; set; }
 }
