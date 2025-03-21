@@ -1,4 +1,5 @@
-﻿using MesaYa.Interfaces;
+﻿using MesaYa.DTOs;
+using MesaYa.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MesaYa.Controllers
@@ -31,17 +32,44 @@ namespace MesaYa.Controllers
         }
 
 
-        [HttpPost]
-        public IActionResult CreateMesa([FromBody] CrearMesaDTO crearMesaDTO)
+        [HttpPost("crear")]
+        public async Task<IActionResult> CrearMesa([FromBody] CrearMesaDTO dto)
+        {
+            var resultado = await _mesaService.CreateMesa(dto);
+            return Ok(resultado);
+        }
+
+        [HttpPatch("soft-delete/{id}")]
+        public async Task<IActionResult> SoftDeleteMesa(int id)
         {
             try
             {
-                var mesa = _mesaService.CreateMesa(crearMesaDTO);
-                return Ok(mesa);
+                bool result = await _mesaService.SoftDeleteMesa(id);
+                if (result)
+                    return Ok(new { message = "Mesa eliminada correctamente." });
+
+                return BadRequest(new { message = "No se pudo eliminar la mesa." });
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                return BadRequest(e.Message);
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("restore/{id}")]
+        public async Task<IActionResult> RestoreMesa(int id)
+        {
+            try
+            {
+                bool result = await _mesaService.RestoreMesa(id);
+                if (result)
+                    return Ok(new { message = "Mesa restaurada correctamente." });
+
+                return BadRequest(new { message = "No se pudo restaurar la mesa." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
             }
         }
 
@@ -69,7 +97,19 @@ namespace MesaYa.Controllers
             }
         }
 
+        [HttpGet("restaurante/{restauranteId}")]
+        public async Task<IActionResult> GetMesasPorRestaurante(int restauranteId)
+        {
+            var mesas = await _mesaService.GetMesasPorRestauranteId(restauranteId);
+            return Ok(mesas);
+        }
 
+        [HttpGet("activas/{restauranteId}")]
+        public async Task<IActionResult> GetMesasActivas(int restauranteId)
+        {
+            var mesas = await _mesaService.GetMesasActivasPorRestauranteId(restauranteId);
+            return Ok(mesas);
+        }
 
     }
 }
