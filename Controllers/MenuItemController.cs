@@ -63,6 +63,69 @@ namespace MesaYa.Controllers
             }
         }
 
+        [HttpGet("restaurante/{restauranteId}")]
+        public IActionResult GetMenusByRestaurante(int restauranteId)
+        {
+            try
+            {
+                var menus = _menuItemService.GetMenusByRestauranteId(restauranteId);
+                return Ok(menus);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("activos/restaurante/{restauranteId}")]
+        public IActionResult GetMenusActivosByRestaurante(int restauranteId)
+        {
+            try
+            {
+                var result = _menuItemService.GetMenusActivosByRestauranteId(restauranteId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+        [HttpPut("softdelete/{id}")]
+        public async Task<IActionResult> SoftDeleteMenuItem(int id)
+        {
+            try
+            {
+                var result = await _menuItemService.SoftDeleteMenuItem(id);
+                return Ok(new { message = "Menú eliminado correctamente." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+        [HttpPut("restaurar/{id}")]
+        public async Task<IActionResult> RestaurarMenuItem(int id)
+        {
+            try
+            {
+                var result = await _menuItemService.RestaurarMenuItem(id);
+                return Ok(new { message = "Menú restaurado correctamente." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+
 
 
 
