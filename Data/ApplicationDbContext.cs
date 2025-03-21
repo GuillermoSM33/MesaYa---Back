@@ -22,6 +22,7 @@ namespace MesaYa.Data
         public DbSet<Auditoria> Auditorias { get; set; }
         public DbSet<ErrorSistema> ErroresSistema { get; set; }
         public DbSet<ConfiguracionSistema> ConfiguracionesSistema { get; set; }
+        public DbSet<RevokedToken> RevokedTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

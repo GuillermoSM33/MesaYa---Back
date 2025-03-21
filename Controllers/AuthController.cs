@@ -1,6 +1,11 @@
-﻿using MesaYa.Interfaces;
+﻿using MesaYa.Data;
+using MesaYa.Interfaces;
 using MesaYa.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MesaYa.Controllers
 {
@@ -10,9 +15,12 @@ namespace MesaYa.Controllers
     {
         private readonly IAuthService _authService;
 
-        public AuthController(IAuthService authService)
+        private readonly ApplicationDbContext _context;
+
+        public AuthController(IAuthService authService, ApplicationDbContext context)
         {
             _authService = authService;
+            _context = context;
         }
         public class LoginRequest
         {
@@ -70,6 +78,48 @@ namespace MesaYa.Controllers
 
             return Ok(new { token });
         }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+          
+            var authHeader = Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                return BadRequest(new { message = "Token no proporcionado o formato incorrecto." });
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+
+            var handler = new JwtSecurityTokenHandler();
+            if (!handler.CanReadToken(token))
+            {
+                return BadRequest(new { message = "Token inválido." });
+            }
+
+            var jwtToken = handler.ReadJwtToken(token);
+            var jti = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+            if (string.IsNullOrEmpty(jti))
+            {
+                return BadRequest(new { message = "No se pudo extraer el Jti del token." });
+            }
+
+            var expires = jwtToken.ValidTo; // Fecha y hora UTC de expiración del token
+
+            var revokedToken = new RevokedToken
+            {
+                Jti = jti,
+                RevokedAt = DateTime.UtcNow,
+                ExpirationDate = expires
+            };
+
+            _context.RevokedTokens.Add(revokedToken);
+            _context.SaveChanges();
+
+            return Ok(new { message = "Sesión cerrada. Token revocado." });
+        }
+
 
     }
 }
