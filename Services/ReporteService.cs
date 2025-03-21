@@ -14,8 +14,8 @@ public class ReporteService
     public List<RestauranteMasReservadoDTO> GetRestaurantesMasReservados(DateTime? fechaInicio, DateTime? fechaFin, string? nombreRestaurante)
     {
         var query = _context.Reservas
-            .Include(r => r.Mesa)
-            .ThenInclude(m => m.Restaurante)
+            //.Include(r => r.Mesa)
+            //.ThenInclude(m => m.Restaurante)
             .AsQueryable();
 
         if (fechaInicio.HasValue)
@@ -30,16 +30,16 @@ public class ReporteService
 
         if (!string.IsNullOrEmpty(nombreRestaurante))
         {
-            query = query.Where(r => r.Mesa.Restaurante.RestauranteNombre.Contains(nombreRestaurante));
+            //query = query.Where(r => r.Mesa.Restaurante.RestauranteNombre.Contains(nombreRestaurante));
         }
 
         return query
-            .GroupBy(r => new { r.Mesa.RestauranteId, r.Mesa.Restaurante.RestauranteNombre })
+            //.GroupBy(r => new { r.Mesa.RestauranteId, r.Mesa.Restaurante.RestauranteNombre })
             .Select(g => new RestauranteMasReservadoDTO
             {
-                RestauranteId = g.Key.RestauranteId,
-                RestauranteNombre = g.Key.RestauranteNombre,
-                TotalReservas = g.Count()
+               // RestauranteId = g.Key.RestauranteId,
+               // RestauranteNombre = g.Key.RestauranteNombre,
+               // TotalReservas = g.Count()
             })
             .OrderByDescending(r => r.TotalReservas)
         .ToList();
