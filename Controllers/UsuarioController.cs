@@ -71,6 +71,20 @@ namespace MesaYa.Controllers
             return Ok(user);
         }
 
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            try
+            {
+                var allUsers = await _context.Usuarios.ToListAsync();
+                return Ok(allUsers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         //Endpoint para obtener a los usuarios con rol de hostess
 
         [HttpGet("hostess")]

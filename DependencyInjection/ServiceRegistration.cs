@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using MesaYa.Models;
 using MesaYa.Hubs;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace MesaYa.DependencyInjection
 {
@@ -49,7 +50,8 @@ namespace MesaYa.DependencyInjection
             services.AddScoped<IReservaService, ReservaService>();
             services.AddScoped<IRestauranteService, RestauranteService>();
             services.AddScoped<IMesaService, MesaService>();
-
+            services.AddScoped<IMenuCategoriaService, MenuCategoriaService>();
+            services.AddScoped<IMenuItemService, MenuItemService>();
             // Agregar el Hub de SignalR
             services.AddTransient<ReservaHub>();
 
@@ -77,6 +79,33 @@ namespace MesaYa.DependencyInjection
                         ValidateAudience = true,
                         ValidIssuer = jwtIssuer,
                         ValidAudience = jwtAudience
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = async context =>
+                        {
+                            var jwtToken = context.SecurityToken as JwtSecurityToken;
+                            var jti = jwtToken?.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+                            if (string.IsNullOrEmpty(jti))
+                            {
+                                context.Fail("El token no tiene 'jti' y no puede validarse.");
+                                return;
+                            }
+
+                            var dbContext = context.HttpContext.RequestServices
+                                .GetRequiredService<ApplicationDbContext>();
+
+                            bool isRevoked = await dbContext.RevokedTokens
+                                .AnyAsync(rt => rt.Jti == jti);
+
+                            if (isRevoked)
+                            {
+                                context.Fail("Token revocado. No se permite el acceso.");
+                                return;
+                            }
+                        }
                     };
                 });
 
