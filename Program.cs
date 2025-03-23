@@ -35,7 +35,12 @@ builder.Services.AddControllers()
     });
 
 //Configuración del SendGrid
-builder.Services.Configure<SendGridSettings>(builder.Configuration.GetSection("SendGrid"));
+builder.Services.Configure<SendGridSettings>(options =>
+{
+    options.ApiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+    options.FromEmail = Environment.GetEnvironmentVariable("SENDGRID_FROM_EMAIL");
+    options.FromName = Environment.GetEnvironmentVariable("SENDGRID_FROM_NAME");
+});
 
 
 builder.Services.AddEndpointsApiExplorer();
