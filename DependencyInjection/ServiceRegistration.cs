@@ -52,6 +52,8 @@ namespace MesaYa.DependencyInjection
             services.AddScoped<IMesaService, MesaService>();
             services.AddScoped<IMenuCategoriaService, MenuCategoriaService>();
             services.AddScoped<IMenuItemService, MenuItemService>();
+            services.AddScoped<ReporteService>();
+            services.AddScoped<INotificacionService, NotificacionService>();
             // Agregar el Hub de SignalR
             services.AddTransient<ReservaHub>();
 
