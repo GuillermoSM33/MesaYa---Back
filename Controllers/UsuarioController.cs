@@ -1,5 +1,6 @@
 ﻿using System;
 using MesaYa.Data;
+using MesaYa.DTOs;
 using MesaYa.Interfaces;
 using MesaYa.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -103,6 +104,66 @@ namespace MesaYa.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        //Endpoint para poder editar a un usuario
+        [HttpPost("edit-user")]
+        public async Task<IActionResult> ActionEditUser([FromBody] UserDataForEditDTO userDto)
+        {
+            try
+            {
+                var userToEdit = await _context.Usuarios
+                    .Include(u => u.UsuarioAsRoles)
+                        .ThenInclude(uar => uar.Role)
+                    .FirstOrDefaultAsync(u => u.UsuarioId == userDto.UsuarioId);
+
+                if (userToEdit == null)
+                {
+                    return NotFound(new { message = "Usuario no encontrado" });
+                }
+
+                // Actualizar datos del usuario
+                userToEdit.Username = userDto.Username;
+                userToEdit.Email = userDto.Email;
+                userToEdit.PasswordHash = userDto.PasswordHash;
+                userToEdit.IsDeleted = userDto.IsDeleted;
+
+                // Actualizar roles
+                userToEdit.UsuarioAsRoles.Clear();
+
+                foreach (var roleId in userDto.RoleIds)
+                {
+                    var roleExists = await _context.Roles.AnyAsync(r => r.RoleId == roleId);
+                    if (!roleExists)
+                        return BadRequest(new { message = $"El rol con ID {roleId} no existe" });
+
+                    userToEdit.UsuarioAsRoles.Add(new UsuarioAsRole
+                    {
+                        UsuarioId = userDto.UsuarioId,
+                        RoleId = roleId
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Usuario editado con éxito",
+                    user = new
+                    {
+                        userToEdit.UsuarioId,
+                        userToEdit.Username,
+                        userToEdit.Email,
+                        Roles = userToEdit.UsuarioAsRoles.Select(r => r.RoleId)
+                    }
+                });
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
 
     }
 }
