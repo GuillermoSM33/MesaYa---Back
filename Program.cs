@@ -1,6 +1,9 @@
 using MesaYa.DependencyInjection;
 using DotNetEnv;
 using System.Text.Json.Serialization;
+using MesaYa.Interfaces;
+using MesaYa.Services;
+using MesaYa.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +34,13 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.WriteIndented = true;
     });
 
-builder.Services.AddScoped<ReporteService>();
+//Configuración del SendGrid
+builder.Services.Configure<SendGridSettings>(options =>
+{
+    options.ApiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+    options.FromEmail = Environment.GetEnvironmentVariable("SENDGRID_FROM_EMAIL");
+    options.FromName = Environment.GetEnvironmentVariable("SENDGRID_FROM_NAME");
+});
 
 
 builder.Services.AddEndpointsApiExplorer();

@@ -93,6 +93,8 @@ namespace MesaYa.Data
                 .HasForeignKey(ir => ir.RestauranteId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+
+
             // Fecha base para el seed data (valor constante para evitar problemas en migraciones)
             var baseDate = new DateTime(2025, 3, 8, 12, 0, 0);
 
