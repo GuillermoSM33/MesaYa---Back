@@ -1,6 +1,8 @@
 ﻿using MesaYa.Interfaces;
 using MesaYa.Models;
+using MesaYa.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace MesaYa.Controllers
 {
@@ -9,15 +11,17 @@ namespace MesaYa.Controllers
     public class ReservaController : ControllerBase
     {
         private readonly IReservaService _reservaService;
+        private readonly INotificacionService _notificacionService;
 
-        public ReservaController(IReservaService reservaService)
+        public ReservaController(IReservaService reservaService, INotificacionService notificacionService)
         {
             _reservaService = reservaService;
+            _notificacionService = notificacionService;
         }
 
 
         [HttpPost]
-        public IActionResult CreateReserva([FromBody] CrearReservaDTO crearReservaDTO)
+        public async Task<IActionResult> CreateReserva([FromBody] CrearReservaDTO crearReservaDTO)
         {
             if (!ModelState.IsValid)  // Validar el DTO
             {
@@ -27,7 +31,19 @@ namespace MesaYa.Controllers
             try
             {
                 var reserva = _reservaService.CreateReserva(crearReservaDTO);
+
+                // Crear la notificación
+                var mensaje = $"Tu reserva ha sido ha sido exitosa.<br>" +
+                    $"Fecha: {reserva.FechaReserva}<br>" +
+                    $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
+                    $"Estado: {reserva.Estado}";
+                    
+                var notificacion = await _notificacionService.CrearNotificacionAsync(reserva.UsuarioId, mensaje, "Reserva");
+
+                // Enviar la notificación por correo
+                await _notificacionService.EnviarNotificacionAsync(notificacion);
                 return Ok(reserva);  // Devuelve la reserva creada
+
             }
             catch (KeyNotFoundException ex)
             {
