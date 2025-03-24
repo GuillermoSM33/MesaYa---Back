@@ -164,6 +164,53 @@ namespace MesaYa.Controllers
             }
         }
 
+        //Endpoint para editar su propio perfil por usuario
+        [HttpPut("edit-profile/{usuarioId}")]
+        public async Task<IActionResult> EditProfile([FromRoute] int usuarioId,
+                                                    [FromBody] UserSelfProfileEditDTO userDto)
+        {
+            try
+            {
+                // 1. Buscar al usuario por su ID
+                var userToEdit = await _context.Usuarios
+                    .Include(u => u.UsuarioAsRoles)
+                        .ThenInclude(uar => uar.Role)
+                    .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+
+                if (userToEdit == null)
+                {
+                    return NotFound(new { message = "Usuario no encontrado" });
+                }
+
+                // 2. Actualizar únicamente lo que el usuario tiene permitido cambiar
+                userToEdit.Username = userDto.Username;
+                userToEdit.Email = userDto.Email;
+                userToEdit.PasswordHash = userDto.PasswordHash;
+                // Ojo: Si recibes la contraseña en texto plano,
+                // aquí deberías hashearla antes de guardarla
+
+                // 3. Guardar cambios
+                await _context.SaveChangesAsync();
+
+                // 4. Retornar la información editada (si lo deseas)
+                return Ok(new
+                {
+                    message = "Perfil editado con éxito",
+                    user = new
+                    {
+                        userToEdit.UsuarioId,
+                        userToEdit.Username,
+                        userToEdit.Email,
+                        // Roles, solo si quieres devolverlos
+                        Roles = userToEdit.UsuarioAsRoles.Select(r => r.RoleId)
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
     }
 }
