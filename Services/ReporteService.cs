@@ -121,13 +121,12 @@ public class ReporteService
 
     public List<RestauranteMasReservadoDTO> GetRestaurantesMasReservados(DateTime? fechaInicio, DateTime? fechaFin, string? nombreRestaurante)
     {
-        // Corregimos la consulta para acceder a las mesas a través de la tabla intermedia ReservaAsMesa
         var query = _context.Reservas
-            .Include(r => r.ReservaAsMesas)  // Se incluye la relación con ReservaAsMesa
-            .ThenInclude(rm => rm.Mesa)     // Depues debemos incluir la Mesa
-            .ThenInclude(m => m.Restaurante)  // Se incluye Restaurante
+            .Include(r => r.ReservaAsMesas)
+            .ThenInclude(rm => rm.Mesa)
             .AsQueryable();
 
+    
         if (fechaInicio.HasValue)
         {
             query = query.Where(r => r.FechaReserva >= fechaInicio.Value);
@@ -138,13 +137,17 @@ public class ReporteService
             query = query.Where(r => r.FechaReserva <= fechaFin.Value);
         }
 
+        
         if (!string.IsNullOrEmpty(nombreRestaurante))
         {
-            query = query.Where(r => r.ReservaAsMesas.Any(rm => rm.Mesa.Restaurante.RestauranteNombre.Contains(nombreRestaurante)));
+            query = query.Where(r => r.ReservaAsMesas
+                .Any(rm => rm.Mesa.Restaurante != null && rm.Mesa.Restaurante.RestauranteNombre.Contains(nombreRestaurante)));
         }
 
         return query
-            .GroupBy(r => new { r.ReservaAsMesas.FirstOrDefault().Mesa.RestauranteId, r.ReservaAsMesas.FirstOrDefault().Mesa.Restaurante.RestauranteNombre })
+            .SelectMany(r => r.ReservaAsMesas) 
+            .Where(rm => rm.Mesa.Restaurante != null) 
+            .GroupBy(rm => new { rm.Mesa.RestauranteId, rm.Mesa.Restaurante.RestauranteNombre })
             .Select(g => new RestauranteMasReservadoDTO
             {
                 RestauranteId = g.Key.RestauranteId,
@@ -154,6 +157,7 @@ public class ReporteService
             .OrderByDescending(r => r.TotalReservas)
             .ToList();
     }
+
 
     public List<PlatoMasPedidoDTO> GetPlatosMasPedidos(DateTime? fechaInicio, DateTime? fechaFin, string? nombreRestaurante)
     {

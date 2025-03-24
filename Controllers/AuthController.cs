@@ -74,7 +74,7 @@ namespace MesaYa.Controllers
 
             var role = user.UsuarioAsRoles.FirstOrDefault()?.Role?.RoleName ?? "User";
 
-            var token = _authService.GenerateJWTToken(user.Email, user.Username, role);
+            var token = _authService.GenerateJWTToken(user.Email, user.Username, role, user.UsuarioId); //agregamos el campo de usuario id para parsear el id en el logueo
 
             return Ok(new { token });
         }
