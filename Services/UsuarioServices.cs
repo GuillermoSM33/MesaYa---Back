@@ -1,6 +1,7 @@
 ﻿using MesaYa.Data;
 using MesaYa.Interfaces;
 using MesaYa.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -19,7 +20,10 @@ namespace MesaYa.Services
 
         public Usuario GetUserById(int id)
         {
-            return _context.Usuarios.Find(id);
+            return _context.Usuarios
+                .Include(u => u.UsuarioAsRoles)
+                .ThenInclude(uar => uar.Role)
+                .FirstOrDefault(u => u.UsuarioId == id);
         }
 
         public void CreateUser(Usuario usuario)

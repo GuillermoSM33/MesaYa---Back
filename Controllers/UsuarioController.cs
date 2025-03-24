@@ -69,7 +69,16 @@ namespace MesaYa.Controllers
             {
                 return NotFound(new { message = "Usuario no encontrado" });
             }
-            return Ok(user);
+
+            return Ok(new
+            {
+                user.UsuarioId,
+                user.Username,
+                user.Email,
+                user.PasswordHash,
+                user.IsDeleted,
+                Roles = user.UsuarioAsRoles.Select(r => r.RoleId)
+            });
         }
 
         [HttpGet("all")]
