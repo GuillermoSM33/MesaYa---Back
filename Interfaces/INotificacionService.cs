@@ -7,7 +7,10 @@ namespace MesaYa.Interfaces
     public interface INotificacionService
     {
         Task<Notificacion> CrearNotificacionAsync(int usuarioId, string mensaje, string tipo);
-        Task EnviarNotificacionAsync(Notificacion notificacion);
+
+        //Task EnviarNotificacionAsync(Notificacion notificacion);
+        Task EnviarNotificacionAsync(Notificacion notificacion, byte[] pdfAdjunto, string nombreArchivo);
+
     }
 }
 
