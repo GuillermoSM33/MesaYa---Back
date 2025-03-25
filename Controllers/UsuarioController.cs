@@ -180,28 +180,36 @@ namespace MesaYa.Controllers
         {
             try
             {
-                // 1. Buscar al usuario por su ID
+                // 1. Obtener el usuario
                 var userToEdit = await _context.Usuarios
-                    .Include(u => u.UsuarioAsRoles)
-                        .ThenInclude(uar => uar.Role)
                     .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
 
                 if (userToEdit == null)
-                {
                     return NotFound(new { message = "Usuario no encontrado" });
+
+                // 2. Verificar duplicado de email si cambió
+                if (!string.Equals(userToEdit.Email, userDto.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    bool existsEmail = await _context.Usuarios
+                        .AnyAsync(u => u.Email == userDto.Email && u.UsuarioId != usuarioId);
+
+                    if (existsEmail)
+                        return Conflict(new { message = "El email ya está en uso por otro usuario." });
                 }
 
-                // 2. Actualizar únicamente lo que el usuario tiene permitido cambiar
+                // 3. Actualizar campos permitidos
                 userToEdit.Username = userDto.Username;
                 userToEdit.Email = userDto.Email;
-                userToEdit.PasswordHash = userDto.PasswordHash;
-                // Ojo: Si recibes la contraseña en texto plano,
-                // aquí deberías hashearla antes de guardarla
 
-                // 3. Guardar cambios
+                // 4. Hashear la contraseña si el usuario la envió
+                if (!string.IsNullOrWhiteSpace(userDto.Password))
+                {
+                    userToEdit.PasswordHash = _usuarioServices.HashPassword(userDto.Password);
+                }
+
+                // 5. Guardar
                 await _context.SaveChangesAsync();
 
-                // 4. Retornar la información editada (si lo deseas)
                 return Ok(new
                 {
                     message = "Perfil editado con éxito",
@@ -209,9 +217,7 @@ namespace MesaYa.Controllers
                     {
                         userToEdit.UsuarioId,
                         userToEdit.Username,
-                        userToEdit.Email,
-                        // Roles, solo si quieres devolverlos
-                        Roles = userToEdit.UsuarioAsRoles.Select(r => r.RoleId)
+                        userToEdit.Email
                     }
                 });
             }
