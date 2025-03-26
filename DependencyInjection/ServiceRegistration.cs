@@ -138,6 +138,9 @@ namespace MesaYa.DependencyInjection
                 });
             });
 
+            // Establecer licencia Community para QuestPDF
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
             return services;
         }
     }

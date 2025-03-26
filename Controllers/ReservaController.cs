@@ -3,6 +3,11 @@ using MesaYa.Models;
 using MesaYa.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using MesaYa.Document;
+using MesaYa.Services;
+using QuestPDF.Fluent;
+using MesaYa.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MesaYa.Controllers
 {
@@ -12,11 +17,13 @@ namespace MesaYa.Controllers
     {
         private readonly IReservaService _reservaService;
         private readonly INotificacionService _notificacionService;
+        private readonly ApplicationDbContext _context;
 
-        public ReservaController(IReservaService reservaService, INotificacionService notificacionService)
+        public ReservaController(IReservaService reservaService, INotificacionService notificacionService, ApplicationDbContext context)
         {
             _reservaService = reservaService;
             _notificacionService = notificacionService;
+            _context = context;
         }
 
 
@@ -54,7 +61,6 @@ namespace MesaYa.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
-
 
         [HttpPost("crear-multiples-mesas")]
         public async Task<IActionResult> CrearReservaConMultiplesMesas([FromBody] CrearReservaMultiplesMesasDTO dto)

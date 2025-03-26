@@ -26,8 +26,6 @@ namespace MesaYa.Services
                 _configuration = configuration;
                 _sendGridSettings = sendGridSettings.Value;
         }
-        
-
 
         public async Task<Notificacion> CrearNotificacionAsync(int usuarioId, string mensaje, string tipo)
         {
@@ -47,7 +45,7 @@ namespace MesaYa.Services
             return notificacion;
         }
 
-        public async Task EnviarNotificacionAsync(Notificacion notificacion)
+        /*public async Task EnviarNotificacionAsync(Notificacion notificacion)
         {
             var usuario = await GetUserByIdAsync(notificacion.UsuarioId);
 
@@ -69,6 +67,37 @@ namespace MesaYa.Services
                 await _context.SaveChangesAsync();
             }
         }
+
+        */
+        public async Task EnviarNotificacionAsync(Notificacion notificacion, byte[] pdfAdjunto, string nombreArchivo)
+        {
+            var usuario = await GetUserByIdAsync(notificacion.UsuarioId);
+
+            var client = new SendGridClient(_sendGridSettings.ApiKey);
+            var from = new EmailAddress(_sendGridSettings.FromEmail, _sendGridSettings.FromName);
+            var subject = "🎉 Confirmación de Reserva";
+            var to = new EmailAddress(usuario.Email);
+
+            var plainTextContent = notificacion.Mensaje;
+            var htmlContent = $"<strong>{notificacion.Mensaje}</strong>";
+
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+
+            // 👇 Adjuntar el PDF
+            var base64Pdf = Convert.ToBase64String(pdfAdjunto);
+            msg.AddAttachment(nombreArchivo, base64Pdf, "application/pdf");
+
+            var response = await client.SendEmailAsync(msg);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Accepted || response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                notificacion.Enviado = true;
+                notificacion.FechaEnvio = DateTime.Now;
+                _context.Notificaciones.Update(notificacion);
+                await _context.SaveChangesAsync();
+            }
+        }
+
         //public async Task EnviarNotificacionAsync(NotificacionDto notificacion)
         //{
         //    var usuario = await GetUserByIdAsync(notificacion.NombreUsuario.leng);

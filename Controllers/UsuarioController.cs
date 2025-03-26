@@ -69,7 +69,16 @@ namespace MesaYa.Controllers
             {
                 return NotFound(new { message = "Usuario no encontrado" });
             }
-            return Ok(user);
+
+            return Ok(new
+            {
+                user.UsuarioId,
+                user.Username,
+                user.Email,
+                user.PasswordHash,
+                user.IsDeleted,
+                Roles = user.UsuarioAsRoles.Select(r => r.RoleId)
+            });
         }
 
         [HttpGet("all")]
@@ -77,7 +86,21 @@ namespace MesaYa.Controllers
         {
             try
             {
-                var allUsers = await _context.Usuarios.ToListAsync();
+                var allUsers = await _context.Usuarios
+                    .Include(u => u.UsuarioAsRoles)
+                        .ThenInclude(uar => uar.Role)
+                    .Select(u => new
+                    {
+                        u.UsuarioId,
+                        u.Username,
+                        u.Email,
+                        u.PasswordHash,
+                        u.CreatedAt,
+                        u.IsDeleted,
+                        Roles = u.UsuarioAsRoles.Select(r => r.RoleId).ToList()
+                    })
+                    .ToListAsync();
+
                 return Ok(allUsers);
             }
             catch (Exception ex)
@@ -164,6 +187,59 @@ namespace MesaYa.Controllers
             }
         }
 
+        //Endpoint para editar su propio perfil por usuario
+        [HttpPut("edit-profile/{usuarioId}")]
+        public async Task<IActionResult> EditProfile([FromRoute] int usuarioId,
+                                                    [FromBody] UserSelfProfileEditDTO userDto)
+        {
+            try
+            {
+                // 1. Obtener el usuario
+                var userToEdit = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+
+                if (userToEdit == null)
+                    return NotFound(new { message = "Usuario no encontrado" });
+
+                // 2. Verificar duplicado de email si cambió
+                if (!string.Equals(userToEdit.Email, userDto.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    bool existsEmail = await _context.Usuarios
+                        .AnyAsync(u => u.Email == userDto.Email && u.UsuarioId != usuarioId);
+
+                    if (existsEmail)
+                        return Conflict(new { message = "El email ya está en uso por otro usuario." });
+                }
+
+                // 3. Actualizar campos permitidos
+                userToEdit.Username = userDto.Username;
+                userToEdit.Email = userDto.Email;
+
+                // 4. Hashear la contraseña si el usuario la envió
+                if (!string.IsNullOrWhiteSpace(userDto.Password))
+                {
+                    userToEdit.PasswordHash = _usuarioServices.HashPassword(userDto.Password);
+                }
+
+                // 5. Guardar
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    message = "Perfil editado con éxito",
+                    user = new
+                    {
+                        userToEdit.UsuarioId,
+                        userToEdit.Username,
+                        userToEdit.Email
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
     }
 }
