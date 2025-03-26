@@ -14,139 +14,150 @@ namespace MesaYa.Models
     {
         private readonly ApplicationDbContext _context;
         private readonly IHubContext<ReservaHub> _hubContext;
-        private readonly ValidadorHorariosReserva _validadorHorarios;
-
+        //private readonly ValidadorHorariosReserva _validadorHorarios;
+        
         public ReservaService(ApplicationDbContext context, IHubContext<ReservaHub> hubContext)
         {
             _context = context;
             _hubContext = hubContext;
-            _validadorHorarios = new ValidadorHorariosReserva(context);
+           //  _validadorHorarios = new ValidadorHorariosReserva(context);
         }
 
-        public Reserva CreateReserva(CrearReservaDTO reservaDTO)
+
+        public async Task<Reserva> CrearReservaAsync(CrearReservaDTO dto)
         {
-            using var transaction = _context.Database.BeginTransaction();
+            var mesa = await _context.Mesa
+                .Include(m => m.Restaurante)
+                .FirstOrDefaultAsync(m => m.MesaId == dto.MesaId && !m.IsDeleted);
 
-            try
+            if (mesa == null)
+                throw new KeyNotFoundException("La mesa no existe.");
+
+            if (mesa.Restaurante == null)
+                throw new InvalidOperationException("El restaurante asociado no existe.");
+
+            var horaReserva = dto.FechaReserva.TimeOfDay;
+
+            if (horaReserva < mesa.Restaurante.HoraApertura || horaReserva >= mesa.Restaurante.HoraCierre)
+                throw new InvalidOperationException("La hora solicitada está fuera del horario del restaurante.");
+
+            var horaFin = dto.FechaReserva.AddHours(2);
+
+            var reservas = await _context.ReservaAsMesas
+                .Include(rm => rm.Reserva)
+                .Where(rm => rm.MesaId == dto.MesaId &&
+                             !rm.Reserva.IsDeleted &&
+                             rm.Reserva.FechaReserva.Date == dto.FechaReserva.Date)
+                .ToListAsync();
+
+            bool conflicto = reservas.Any(r =>
+                (dto.FechaReserva >= r.Reserva.FechaReserva && dto.FechaReserva < r.Reserva.HoraFin) ||
+                (horaFin > r.Reserva.FechaReserva && horaFin <= r.Reserva.HoraFin) ||
+                (dto.FechaReserva <= r.Reserva.FechaReserva && horaFin >= r.Reserva.HoraFin));
+
+            if (conflicto)
+                throw new InvalidOperationException("La hora seleccionada ya está reservada para esta mesa.");
+
+            var reserva = new Reserva
             {
-                var mesa = _context.Mesa
-                    .Include(m => m.Restaurante)
-                    .FirstOrDefault(m => m.MesaId == reservaDTO.MesaId && !m.IsDeleted)
-                    ?? throw new KeyNotFoundException("La mesa no existe o ha sido eliminada.");
+                UsuarioId = dto.UsuarioId,
+                FechaReserva = dto.FechaReserva,
+                HoraFin = horaFin,
+                NumeroPersonas = dto.NumeroPersonas,
+                Estado = "Pendiente",
+                IsDeleted = false
+            };
 
-                if (!_context.Usuarios.Any(u => u.UsuarioId == reservaDTO.UsuarioId && !u.IsDeleted))
-                    throw new KeyNotFoundException("El usuario no existe o ha sido eliminado.");
+            _context.Reservas.Add(reserva);
+            await _context.SaveChangesAsync();
 
-                var fechaHoraInicio = reservaDTO.FechaReserva.Date.Add(reservaDTO.HoraReserva);
-                var duracion = TimeSpan.FromHours(2); // O obtener de configuración
-                var fechaHoraFin = fechaHoraInicio.Add(duracion);
-
-                var reserva = new Reserva
-                {
-                    UsuarioId = reservaDTO.UsuarioId,
-                    FechaReserva = reservaDTO.FechaReserva.Date,
-                    HoraInicio = fechaHoraInicio,
-                    HoraFin = fechaHoraFin,
-                    Estado = "Pendiente",
-                    NumeroPersonas = reservaDTO.NumeroPersonas,
-                    IsDeleted = false
-                };
-
-                // Validaciones
-                if (fechaHoraInicio < DateTime.Now)
-                    throw new InvalidOperationException("La fecha de reserva no puede ser en el pasado.");
-
-                _validadorHorarios.Validar(reserva, mesa);
-
-                // Persistencia
-                _context.Reservas.Add(reserva);
-                _context.SaveChanges();
-
-                _context.ReservaAsMesas.Add(new ReservaAsMesa
-                {
-                    ReservaId = reserva.ReservaId,
-                    MesaId = mesa.MesaId
-                });
-
-                _context.SaveChanges();
-                transaction.Commit();
-
-                // Notificación en tiempo real
-                _hubContext.Clients.All.SendAsync("NuevaReservaCreada", reserva.ReservaId);
-
-                return reserva;
-            }
-            catch (Exception ex)
+            var reservaMesa = new ReservaAsMesa
             {
-                transaction.Rollback();
-                throw new Exception("Error al crear la reserva.", ex);
-            }
+                MesaId = dto.MesaId,
+                ReservaId = reserva.ReservaId
+            };
+
+            _context.ReservaAsMesas.Add(reservaMesa);
+            await _context.SaveChangesAsync();
+
+            return reserva;
         }
+
+
+
+        public async Task<Reserva> ConfirmarReservaAsync(int reservaId)
+        {
+            var reserva = await _context.Reservas
+                .FirstOrDefaultAsync(r => r.ReservaId == reservaId && !r.IsDeleted);
+
+            if (reserva == null)
+                throw new KeyNotFoundException("La reserva no existe.");
+
+            if (reserva.Estado == "Confirmada")
+                throw new InvalidOperationException("La reserva ya está confirmada.");
+
+            reserva.Estado = "Confirmada";
+            _context.Reservas.Update(reserva);
+            await _context.SaveChangesAsync();
+
+            return reserva;
+        }
+
+
+
 
         public Reserva CreateReservaConMultiplesMesas(CrearReservaMultiplesMesasDTO dto)
         {
-            using var transaction = _context.Database.BeginTransaction();
-
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                // Validar usuario
-                if (!_context.Usuarios.Any(u => u.UsuarioId == dto.UsuarioId && !u.IsDeleted))
-                    throw new KeyNotFoundException("El usuario no existe o ha sido eliminado.");
-
-                // Validar mesas
-                var mesas = _context.Mesa
-                    .Where(m => dto.MesasIds.Contains(m.MesaId) && !m.IsDeleted)
-                    .ToList();
-
-                if (mesas.Count != dto.MesasIds.Count)
-                    throw new KeyNotFoundException("Una o más mesas no existen o han sido eliminadas.");
-
-                // Crear reserva
-                var fechaHoraInicio = dto.FechaReserva.Date.Add(dto.HoraReserva);
-                var duracion = TimeSpan.FromHours(2);
-                var fechaHoraFin = fechaHoraInicio.Add(duracion);
-
-                var reserva = new Reserva
+                try
                 {
-                    UsuarioId = dto.UsuarioId,
-                    FechaReserva = dto.FechaReserva.Date,
-                    HoraInicio = fechaHoraInicio,
-                    HoraFin = fechaHoraFin,
-                    Estado = "Pendiente",
-                    NumeroPersonas = dto.NumeroPersonas,
-                    IsDeleted = false
-                };
-
-                _context.Reservas.Add(reserva);
-                _context.SaveChanges();
-
-                // Asignar mesas y validar disponibilidad
-                foreach (var mesa in mesas)
-                {
-                    _validadorHorarios.Validar(reserva, mesa);
-
-                    _context.ReservaAsMesas.Add(new ReservaAsMesa
+                    var nuevaReserva = new Reserva
                     {
-                        ReservaId = reserva.ReservaId,
-                        MesaId = mesa.MesaId
-                    });
+                        UsuarioId = dto.UsuarioId,
+                        FechaReserva = dto.FechaReserva,
+                        Estado = "Pendiente",
+                        NumeroPersonas = dto.NumeroPersonas,
+                        IsDeleted = false,
+                    };
 
-                    mesa.Disponible = false;
-                    _context.Mesa.Update(mesa);
+                    _context.Reservas.Add(nuevaReserva);
+                    _context.SaveChanges(); // Guardar para obtener ReservaId
+
+                    foreach (var mesaId in dto.MesasIds)
+                    {
+                        var mesa = _context.Mesa.FirstOrDefault(m => m.MesaId == mesaId && !m.IsDeleted);
+                        if (mesa == null)
+                            throw new KeyNotFoundException($"La mesa {mesaId} no existe o ha sido eliminada.");
+
+                        if (!mesa.Disponible)
+                            throw new InvalidOperationException($"La mesa {mesaId} ya está reservada.");
+
+                        mesa.Disponible = false;
+                        _context.Mesa.Update(mesa);
+
+                        var reservaAsMesa = new ReservaAsMesa
+                        {
+                            ReservaId = nuevaReserva.ReservaId,
+                            MesaId = mesa.MesaId
+                        };
+                        _context.ReservaAsMesas.Add(reservaAsMesa);
+                    }
+
+                    _context.SaveChanges();
+                    transaction.Commit();
+
+                    _hubContext.Clients.All.SendAsync("ReservaActualizada", nuevaReserva.ReservaId);
+
+                    return nuevaReserva;
                 }
-
-                _context.SaveChanges();
-                transaction.Commit();
-
-                _hubContext.Clients.All.SendAsync("ReservaActualizada", reserva.ReservaId);
-
-                return reserva;
-            }
-            catch (Exception ex)
-            {
-                transaction.Rollback();
-                Console.WriteLine($"Error al crear reserva: {ex.Message}");
-                throw new Exception("Error al crear la reserva con múltiples mesas.", ex);
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Console.WriteLine($"⚠️ Error al crear la reserva: {ex.Message}");
+                    Console.WriteLine($"🔍 StackTrace: {ex.StackTrace}");
+                    throw new Exception("Error al crear la reserva con múltiples mesas.", ex);
+                }
             }
         }
 
@@ -165,29 +176,36 @@ namespace MesaYa.Models
                 .Include(rm => rm.Reserva)
                 .Where(rm => rm.MesaId == mesaId &&
                              !rm.Reserva.IsDeleted &&
-                              rm.Reserva.FechaReserva.Date == fecha.Date)
+                             rm.Reserva.FechaReserva.Date == fecha.Date)
+                .Select(rm => rm.Reserva)
                 .ToList();
 
             var horasDisponibles = new List<string>();
-            var intervalo = TimeSpan.FromMinutes(30); // Intervalo entre reservas
+            var intervalo = TimeSpan.FromMinutes(30); // Intervalos de media hora
 
-            for (var hora = restaurante.HoraApertura; hora < restaurante.HoraCierre; hora = hora.Add(intervalo))
+            // Convertir la fecha recibida y las horas de apertura/cierre en DateTime completos
+            var horaApertura = fecha.Date + restaurante.HoraApertura;
+            var horaCierre = fecha.Date + restaurante.HoraCierre;
+
+            for (var hora = horaApertura; hora.AddHours(2) <= horaCierre; hora = hora.Add(intervalo))
             {
-                var horaFin = hora.Add(TimeSpan.FromHours(2));
+                var horaFin = hora.AddHours(2);
 
+                // Verificar si se cruza con alguna reserva existente
                 var conflicto = reservas.Any(r =>
-                    (hora >= r.Reserva.HoraInicio.TimeOfDay && hora < r.Reserva.HoraFin.TimeOfDay) ||
-                    (horaFin > r.Reserva.HoraInicio.TimeOfDay && horaFin <= r.Reserva.HoraFin.TimeOfDay) ||
-                    (hora <= r.Reserva.HoraInicio.TimeOfDay && horaFin >= r.Reserva.HoraFin.TimeOfDay));
+                    (hora >= r.FechaReserva && hora < r.HoraFin) ||
+                    (horaFin > r.FechaReserva && horaFin <= r.HoraFin) ||
+                    (hora <= r.FechaReserva && horaFin >= r.HoraFin));
 
                 if (!conflicto)
                 {
-                    horasDisponibles.Add(hora.ToString(@"hh\:mm"));
+                    horasDisponibles.Add(hora.ToString("HH:mm"));
                 }
             }
 
             return horasDisponibles;
         }
+
 
         public async Task<Reserva> AceptarReserva(int reservaId)
         {
@@ -207,92 +225,49 @@ namespace MesaYa.Models
             return reserva;
         }
 
-        public async Task CancelarReserva(int reservaId)
+        public void CancelarReserva(int reservaId)
         {
-            using var transaction = _context.Database.BeginTransaction();
-
-            try
+            using (var transaction = _context.Database.BeginTransaction())
             {
-                var reserva = await _context.Reservas
-                    .Include(r => r.ReservaAsMesas)
-                    .FirstOrDefaultAsync(r => r.ReservaId == reservaId && !r.IsDeleted)
-                    ?? throw new KeyNotFoundException("La reserva no existe o ya ha sido cancelada.");
-
-                reserva.IsDeleted = true;
-                reserva.Estado = "Cancelada";
-                _context.Reservas.Update(reserva);
-
-                // Liberar mesas
-                foreach (var reservaAsMesa in reserva.ReservaAsMesas)
+                try
                 {
-                    var mesa = await _context.Mesa.FindAsync(reservaAsMesa.MesaId);
-                    if (mesa != null)
+                    var reserva = _context.Reservas
+                        .Include(r => r.ReservaAsMesas)
+                        .FirstOrDefault(r => r.ReservaId == reservaId && !r.IsDeleted);
+
+                    if (reserva == null)
                     {
-                        mesa.Disponible = true;
-                        _context.Mesa.Update(mesa);
+                        throw new KeyNotFoundException("La reserva no existe o ya ha sido cancelada.");
                     }
+
+                    reserva.IsDeleted = true;
+                    reserva.Estado = "Cancelada";
+                    _context.Reservas.Update(reserva);
+
+                    foreach (var reservaAsMesa in reserva.ReservaAsMesas)
+                    {
+                        var mesa = _context.Mesa.FirstOrDefault(m => m.MesaId == reservaAsMesa.MesaId);
+                        if (mesa != null)
+                        {
+                            mesa.Disponible = true;
+                            _context.Mesa.Update(mesa);
+                        }
+                    }
+
+                    _context.ReservaAsMesas.RemoveRange(reserva.ReservaAsMesas);
+
+                    _context.SaveChanges();
+
+                    transaction.Commit();
                 }
-
-                await _context.SaveChangesAsync();
-                transaction.Commit();
-
-                await _hubContext.Clients.All.SendAsync("ReservaCancelada", reservaId);
-            }
-            catch (Exception ex)
-            {
-                transaction.Rollback();
-                throw new Exception("Error al cancelar la reserva.", ex);
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception("Error al cancelar la reserva.", ex);
+                }
             }
         }
     }
 
-    public class ValidadorHorariosReserva
-    {
-        private readonly ApplicationDbContext _context;
 
-        public ValidadorHorariosReserva(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        public void Validar(Reserva reserva, Mesa mesa)
-        {
-            ValidarCapacidad(reserva, mesa);
-            ValidarHorarioRestaurante(reserva, mesa.Restaurante);
-            ValidarDisponibilidadMesa(reserva, mesa);
-        }
-
-        private void ValidarCapacidad(Reserva reserva, Mesa mesa)
-        {
-            if (reserva.NumeroPersonas > mesa.Capacidad)
-                throw new InvalidOperationException($"La mesa solo tiene capacidad para {mesa.Capacidad} personas.");
-        }
-
-        private void ValidarHorarioRestaurante(Reserva reserva, Restaurante restaurante)
-        {
-            if (restaurante == null)
-                throw new InvalidOperationException("No se encontró información del restaurante.");
-
-            if (reserva.HoraInicio.TimeOfDay < restaurante.HoraApertura ||
-                reserva.HoraFin.TimeOfDay > restaurante.HoraCierre)
-            {
-                throw new InvalidOperationException(
-                    $"El restaurante solo permite reservas entre {restaurante.HoraApertura:hh\\:mm} y {restaurante.HoraCierre:hh\\:mm}");
-            }
-        }
-
-        private void ValidarDisponibilidadMesa(Reserva reserva, Mesa mesa)
-        {
-            var existeReserva = _context.ReservaAsMesas
-                .Include(rm => rm.Reserva)
-                .Any(rm => rm.MesaId == mesa.MesaId &&
-                           !rm.Reserva.IsDeleted &&
-                            rm.Reserva.FechaReserva.Date == reserva.FechaReserva.Date &&
-                            rm.Reserva.HoraInicio < reserva.HoraFin &&
-                            rm.Reserva.HoraFin > reserva.HoraInicio);
-
-            if (existeReserva)
-                throw new InvalidOperationException("La mesa ya está reservada en ese horario.");
-        }
-    }
 }

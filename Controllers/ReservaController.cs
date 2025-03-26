@@ -23,41 +23,38 @@ namespace MesaYa.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateReserva([FromBody] CrearReservaDTO crearReservaDTO)
         {
-            if (!ModelState.IsValid)  // Validar el DTO
-            {
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            }
 
             try
             {
-                var reserva = _reservaService.CreateReserva(crearReservaDTO);
+                var reserva = await _reservaService.CrearReservaAsync(crearReservaDTO);
 
-                // Crear la notificación
-                var mensaje = $"Tu reserva ha sido ha sido exitosa.<br>" +
-                    $"Fecha: {reserva.FechaReserva}<br>" +
-                    $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
-                    $"Estado: {reserva.Estado}";
-                    
+                var mensaje = $"Tu reserva ha sido exitosa.<br>" +
+                              $"Fecha: {reserva.FechaReserva}<br>" +
+                              $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
+                              $"Estado: {reserva.Estado}";
+
                 var notificacion = await _notificacionService.CrearNotificacionAsync(reserva.UsuarioId, mensaje, "Reserva");
 
-                // Enviar la notificación por correo
                 await _notificacionService.EnviarNotificacionAsync(notificacion);
-                return Ok(reserva);  // Devuelve la reserva creada
 
+                return Ok(reserva);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ex.Message);  // Devuelve un 404 si la mesa o el usuario no existen
+                return NotFound(ex.Message);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);  // Devuelve un 400 si la reserva no es válida
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
+                return StatusCode(500, ex.Message);
             }
         }
+
 
         [HttpPost("crear-multiples-mesas")]
         public async Task<IActionResult> CrearReservaConMultiplesMesas([FromBody] CrearReservaMultiplesMesasDTO dto)
@@ -85,6 +82,40 @@ namespace MesaYa.Controllers
         }
 
 
+        [HttpPut("confirmar/{reservaId}")]
+        public async Task<IActionResult> ConfirmarReserva(int reservaId)
+        {
+            try
+            {
+                var reserva = await _reservaService.ConfirmarReservaAsync(reservaId);
+
+                var mensaje = $"Tu reserva ha sido confirmada.<br>" +
+                              $"Fecha: {reserva.FechaReserva}<br>" +
+                              $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
+                              $"Estado: {reserva.Estado}";
+
+                var notificacion = await _notificacionService.CrearNotificacionAsync(reserva.UsuarioId, mensaje, "Reserva confirmada");
+
+                await _notificacionService.EnviarNotificacionAsync(notificacion);
+
+                return Ok(reserva);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+
 
         [HttpPatch("{reservaId}/cancelar")]
         public IActionResult CancelarReserva(int reservaId)
@@ -103,17 +134,25 @@ namespace MesaYa.Controllers
                 return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
             }
         }
-        [HttpGet("disponibilidad/{mesaId}")]
-        public IActionResult ObtenerHorasDisponibles(int mesaId)
+        [HttpGet("disponibilidad")]
+        public IActionResult ObtenerHorasDisponibles([FromQuery] int mesaId, [FromQuery] DateTime fecha)
         {
             try
             {
-                var horasDisponibles = _reservaService.ObtenerHorasDisponibles(mesaId);
-                return Ok(horasDisponibles);
+                var horas = _reservaService.ObtenerHorasDisponibles(mesaId, fecha);
+                return Ok(horas);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, "Error al obtener horas disponibles: " + ex.Message);
             }
         }
 
