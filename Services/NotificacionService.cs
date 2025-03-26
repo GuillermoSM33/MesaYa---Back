@@ -20,11 +20,11 @@ namespace MesaYa.Services
         private readonly ApplicationDbContext _context;
         private readonly SendGridSettings _sendGridSettings;
 
-        public NotificacionService(ApplicationDbContext context, IConfiguration configuration,IOptions<SendGridSettings> sendGridSettings)
+        public NotificacionService(ApplicationDbContext context, IConfiguration configuration, IOptions<SendGridSettings> sendGridSettings)
         {
-                _context = context ?? throw new ArgumentNullException(nameof(context));
-                _configuration = configuration;
-                _sendGridSettings = sendGridSettings.Value;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _configuration = configuration;
+            _sendGridSettings = sendGridSettings.Value;
         }
 
         public async Task<Notificacion> CrearNotificacionAsync(int usuarioId, string mensaje, string tipo)

@@ -1,4 +1,5 @@
-﻿using MesaYa.Models;
+﻿using MesaYa.DTOs;
+using MesaYa.Models;
 
 namespace MesaYa.Interfaces
 {
@@ -10,6 +11,9 @@ namespace MesaYa.Interfaces
        List<string> ObtenerHorasDisponibles(int mesaId, DateTime fecha);
         Task<Reserva> ConfirmarReservaAsync(int reservaId);
 
-        void CancelarReserva(int reservaId);
+        Task<Reserva> FinalizarReservaAsync(int reservaId);
+        Task<Reserva> CancelarReservaAsync(int reservaId);
+
+        Task<List<ReservaByRestauranteDTO>> GetReservasByRestauranteAsync(int restauranteId);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MesaYa.Data;
+using MesaYa.DTOs;
 using MesaYa.Hubs;
 using MesaYa.Interfaces;
 using Microsoft.AspNetCore.SignalR;
@@ -225,48 +226,71 @@ namespace MesaYa.Models
             return reserva;
         }
 
-        public void CancelarReserva(int reservaId)
+
+        public async Task<Reserva> FinalizarReservaAsync(int reservaId)
         {
-            using (var transaction = _context.Database.BeginTransaction())
-            {
-                try
-                {
-                    var reserva = _context.Reservas
-                        .Include(r => r.ReservaAsMesas)
-                        .FirstOrDefault(r => r.ReservaId == reservaId && !r.IsDeleted);
+            var reserva = await _context.Reservas
+                .Include(r => r.ReservaAsMesas)
+                .FirstOrDefaultAsync(r => r.ReservaId == reservaId && !r.IsDeleted)
+                ?? throw new KeyNotFoundException("Reserva no encontrada.");
 
-                    if (reserva == null)
-                    {
-                        throw new KeyNotFoundException("La reserva no existe o ya ha sido cancelada.");
-                    }
+            reserva.Estado = "Finalizado";
 
-                    reserva.IsDeleted = true;
-                    reserva.Estado = "Cancelada";
-                    _context.Reservas.Update(reserva);
+            // Eliminar de tabla pivote
+            _context.ReservaAsMesas.RemoveRange(reserva.ReservaAsMesas);
 
-                    foreach (var reservaAsMesa in reserva.ReservaAsMesas)
-                    {
-                        var mesa = _context.Mesa.FirstOrDefault(m => m.MesaId == reservaAsMesa.MesaId);
-                        if (mesa != null)
-                        {
-                            mesa.Disponible = true;
-                            _context.Mesa.Update(mesa);
-                        }
-                    }
-
-                    _context.ReservaAsMesas.RemoveRange(reserva.ReservaAsMesas);
-
-                    _context.SaveChanges();
-
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    throw new Exception("Error al cancelar la reserva.", ex);
-                }
-            }
+            await _context.SaveChangesAsync();
+            return reserva;
         }
+
+
+        public async Task<List<ReservaByRestauranteDTO>> GetReservasByRestauranteAsync(int restauranteId)
+        {
+            var reservas = await _context.Reservas
+                .Include(r => r.Usuario)
+                .Include(r => r.ReservaAsMesas)
+                    .ThenInclude(rm => rm.Mesa)
+                .Where(r => r.ReservaAsMesas.Any(rm => rm.Mesa.RestauranteId == restauranteId))
+                .OrderByDescending(r => r.FechaReserva)
+                .ToListAsync();
+
+            if (!reservas.Any())
+                throw new KeyNotFoundException("No se encontraron reservas para este restaurante.");
+
+            var reservasDTO = reservas.Select(r => new ReservaByRestauranteDTO
+            {
+                ReservaId = r.ReservaId,
+                RestauranteId = r.ReservaAsMesas.First().Mesa.RestauranteId, // todas las mesas son del mismo restaurante
+                Estado = r.Estado,
+                UsuarioId = r.UsuarioId,
+                UsuarioNombre = r.Usuario?.Username ?? "Desconocido",
+                NumeroPersonas = r.NumeroPersonas,
+                MesaIds = r.ReservaAsMesas.Select(rm => rm.MesaId).ToList(),
+                MesaNumeros = r.ReservaAsMesas.Select(rm => rm.Mesa.MesaNumero).ToList(),
+                FechaReserva = r.FechaReserva,
+                HoraFin = r.HoraFin,
+                IsDeleted = r.IsDeleted
+            }).ToList();
+
+            return reservasDTO;
+        }
+
+
+        public async Task<Reserva> CancelarReservaAsync(int reservaId)
+        {
+            var reserva = await _context.Reservas
+                .Include(r => r.ReservaAsMesas)
+                .FirstOrDefaultAsync(r => r.ReservaId == reservaId && !r.IsDeleted)
+                ?? throw new KeyNotFoundException("Reserva no encontrada.");
+
+            reserva.Estado = "Cancelado";
+
+            _context.ReservaAsMesas.RemoveRange(reserva.ReservaAsMesas);
+
+            await _context.SaveChangesAsync();
+            return reserva;
+        }
+
     }
 
 
