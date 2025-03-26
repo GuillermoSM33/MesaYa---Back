@@ -46,7 +46,7 @@ namespace MesaYa.Document
             {
                 column.Spacing(5);
 
-                column.Item().AlignCenter().Text("🪑 Confirmación de Reserva")
+                column.Item().AlignCenter().Text("Confirmación de Reserva")
                     .FontSize(28).Bold().FontColor(Colors.Blue.Medium);
 
                 column.Item().AlignCenter().Text("Gracias por reservar con MesaYa")
@@ -79,11 +79,11 @@ namespace MesaYa.Document
                      .Column(column =>
                      {
                          column.Spacing(10);
-                         AddDetailRow(column, "📆 Fecha", FormatearFecha(ExtraerValor("Fecha")));
-                         AddDetailRow(column, "👤 Usuario", _nombreUsuario);
-                         AddDetailRow(column, "🪑 Mesa", ExtraerValor("MesaId"));
-                         AddDetailRow(column, "👥 Personas", ExtraerValor("Personas"));
-                         AddDetailRow(column, "🆔 Reserva", ExtraerValor("ReservaId"));
+                         AddDetailRow(column, "Fecha", FormatearFecha(ExtraerValor("Fecha")));
+                         AddDetailRow(column, "Usuario", _nombreUsuario);
+                         AddDetailRow(column, "Mesa", ExtraerValor("MesaId"));
+                         AddDetailRow(column, "Personas", ExtraerValor("Personas"));
+                         AddDetailRow(column, "Reserva No", ExtraerValor("ReservaId"));
                      });
         }
 
