@@ -85,6 +85,7 @@ namespace MesaYa.Controllers
         }
 
 
+
         [HttpPatch("{reservaId}/cancelar")]
         public IActionResult CancelarReserva(int reservaId)
         {
@@ -102,7 +103,19 @@ namespace MesaYa.Controllers
                 return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
             }
         }
-
+        [HttpGet("disponibilidad/{mesaId}")]
+        public IActionResult ObtenerHorasDisponibles(int mesaId)
+        {
+            try
+            {
+                var horasDisponibles = _reservaService.ObtenerHorasDisponibles(mesaId);
+                return Ok(horasDisponibles);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
 
     }
 }

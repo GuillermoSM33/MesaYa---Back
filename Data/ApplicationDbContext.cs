@@ -17,6 +17,7 @@ namespace MesaYa.Data
         public DbSet<MenuCategoria> MenuCategorias { get; set; }
         public DbSet<ItemAsRestaurante> ItemAsRestaurantes { get; set; }
         public DbSet<ReservaAsMesa> ReservaAsMesas { get; set; }
+        public DbSet<RestaurantesFavoritos> RestaurantesFavoritos { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<Notificacion> Notificaciones { get; set; }
         public DbSet<Auditoria> Auditorias { get; set; }
@@ -93,6 +94,20 @@ namespace MesaYa.Data
                 .HasForeignKey(ir => ir.RestauranteId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<RestaurantesFavoritos>()
+     .HasKey(rf => new { rf.UsuarioId, rf.RestauranteId });
+
+            modelBuilder.Entity<RestaurantesFavoritos>()
+                .HasOne(rf => rf.Usuario)
+                .WithMany(u => u.RestaurantesFavoritos)
+                .HasForeignKey(rf => rf.UsuarioId)
+                .OnDelete(DeleteBehavior.NoAction);  // Si se elimina un usuario, se eliminan sus favoritos
+
+            modelBuilder.Entity<RestaurantesFavoritos>()
+                .HasOne(rf => rf.Restaurante)
+                .WithMany(r => r.RestaurantesFavoritos)
+                .HasForeignKey(rf => rf.RestauranteId)
+                .OnDelete(DeleteBehavior.Cascade); // Si se elimina un restaurante, se eliminan sus favoritos
 
 
             // Fecha base para el seed data (valor constante para evitar problemas en migraciones)
