@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MesaYa.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250321041922_RevokedTokenTable")]
-    partial class RevokedTokenTable
+    [Migration("20250326065053_cambios")]
+    partial class cambios
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -506,6 +506,9 @@ namespace MesaYa.Migrations
                     b.Property<DateTime>("FechaReserva")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime>("HoraFin")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -528,6 +531,7 @@ namespace MesaYa.Migrations
                             CreatedAt = new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Estado = "pendiente",
                             FechaReserva = new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            HoraFin = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
                             NumeroPersonas = 2,
                             UsuarioId = 1
@@ -538,6 +542,7 @@ namespace MesaYa.Migrations
                             CreatedAt = new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Estado = "confirmada",
                             FechaReserva = new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            HoraFin = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
                             NumeroPersonas = 4,
                             UsuarioId = 2
@@ -548,6 +553,7 @@ namespace MesaYa.Migrations
                             CreatedAt = new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             Estado = "cancelada",
                             FechaReserva = new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified),
+                            HoraFin = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsDeleted = false,
                             NumeroPersonas = 3,
                             UsuarioId = 3
@@ -586,6 +592,12 @@ namespace MesaYa.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<TimeSpan>("HoraApertura")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("HoraCierre")
+                        .HasColumnType("time");
+
                     b.Property<string>("Horario")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -622,6 +634,8 @@ namespace MesaYa.Migrations
                             RestauranteId = 1,
                             Descripcion = "Este reastureante sabe bien",
                             Direccion = "Calle 1",
+                            HoraApertura = new TimeSpan(0, 0, 0, 0, 0),
+                            HoraCierre = new TimeSpan(0, 0, 0, 0, 0),
                             Horario = "sadsd",
                             ImagenUrl = "Imagenreal",
                             IsDeleted = false,
@@ -634,6 +648,8 @@ namespace MesaYa.Migrations
                             RestauranteId = 2,
                             Descripcion = "Este reastureante sabe bien",
                             Direccion = "Calle 2",
+                            HoraApertura = new TimeSpan(0, 0, 0, 0, 0),
+                            HoraCierre = new TimeSpan(0, 0, 0, 0, 0),
                             Horario = "sadsd",
                             ImagenUrl = "Imagenreal",
                             IsDeleted = false,
@@ -641,6 +657,24 @@ namespace MesaYa.Migrations
                             Telefono = "0987654321",
                             UsuarioId = 2
                         });
+                });
+
+            modelBuilder.Entity("MesaYa.Models.RestaurantesFavoritos", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RestauranteId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("UsuarioId", "RestauranteId");
+
+                    b.HasIndex("RestauranteId");
+
+                    b.ToTable("RestaurantesFavoritos");
                 });
 
             modelBuilder.Entity("MesaYa.Models.RevokedToken", b =>
@@ -929,6 +963,25 @@ namespace MesaYa.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("MesaYa.Models.RestaurantesFavoritos", b =>
+                {
+                    b.HasOne("MesaYa.Models.Restaurante", "Restaurante")
+                        .WithMany("RestaurantesFavoritos")
+                        .HasForeignKey("RestauranteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MesaYa.Models.Usuario", "Usuario")
+                        .WithMany("RestaurantesFavoritos")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Restaurante");
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("MesaYa.Models.UsuarioAsRole", b =>
                 {
                     b.HasOne("MesaYa.Models.Role", "Role")
@@ -966,10 +1019,14 @@ namespace MesaYa.Migrations
             modelBuilder.Entity("MesaYa.Models.Restaurante", b =>
                 {
                     b.Navigation("ItemAsRestaurantes");
+
+                    b.Navigation("RestaurantesFavoritos");
                 });
 
             modelBuilder.Entity("MesaYa.Models.Usuario", b =>
                 {
+                    b.Navigation("RestaurantesFavoritos");
+
                     b.Navigation("UsuarioAsRoles");
                 });
 #pragma warning restore 612, 618

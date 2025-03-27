@@ -23,12 +23,17 @@ namespace MesaYa.Models
 
         public string ImagenUrl { get; set; }
 
+        public TimeSpan HoraApertura { get; set; }
+        public TimeSpan HoraCierre { get; set; }
+
         [Required]
         public string Horario { get; set; } // Ejemplo: "Mañana" o "Noche"
 
         public string Descripcion { get; set; }
 
         public bool IsDeleted { get; set; } = false; // Soft delete
+
+        public ICollection<RestaurantesFavoritos> RestaurantesFavoritos { get; set; }
 
         public ICollection<ItemAsRestaurante> ItemAsRestaurantes { get; set; } = new List<ItemAsRestaurante>();
 

@@ -1,11 +1,19 @@
-﻿using MesaYa.Models;
+﻿using MesaYa.DTOs;
+using MesaYa.Models;
 
 namespace MesaYa.Interfaces
 {
     public interface IReservaService
     {
-        Reserva CreateReserva(CrearReservaDTO reservaDTO);
+        Task<Reserva> CrearReservaAsync(CrearReservaDTO dto);
         public Reserva CreateReservaConMultiplesMesas(CrearReservaMultiplesMesasDTO dto);
-        void CancelarReserva(int reservaId);
+
+       List<string> ObtenerHorasDisponibles(int mesaId, DateTime fecha);
+        Task<Reserva> ConfirmarReservaAsync(int reservaId);
+
+        Task<Reserva> FinalizarReservaAsync(int reservaId);
+        Task<Reserva> CancelarReservaAsync(int reservaId);
+
+        Task<List<ReservaByRestauranteDTO>> GetReservasByRestauranteAsync(int restauranteId);
     }
 }

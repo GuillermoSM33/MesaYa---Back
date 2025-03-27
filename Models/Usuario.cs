@@ -19,6 +19,8 @@ namespace MesaYa.Models
 
         public bool IsDeleted { get; set; } = false;
 
+        public ICollection<RestaurantesFavoritos> RestaurantesFavoritos { get; set; }
+
         public ICollection<UsuarioAsRole> UsuarioAsRoles { get; set; }
     }
 }
