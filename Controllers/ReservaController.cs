@@ -25,7 +25,6 @@ namespace MesaYa.Controllers
             _notificacionService = notificacionService;
             _context = context;
         }
-
         [HttpPost]
         public async Task<IActionResult> CrearReservaAsync([FromBody] CrearReservaDTO crearReservaDTO)
         {
@@ -34,59 +33,48 @@ namespace MesaYa.Controllers
 
             try
             {
+                Console.WriteLine("Paso 1: Iniciando creación");
+
                 var reserva = await _reservaService.CrearReservaAsync(crearReservaDTO);
 
+                Console.WriteLine("Paso 2: Reserva creada");
 
-                // Traer nombre del usuario desde la base de datos
-                var usuario = await _context.Usuarios
-                    .FirstOrDefaultAsync(u => u.UsuarioId == reserva.UsuarioId);
-
+                var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == reserva.UsuarioId);
                 if (usuario == null)
                     return NotFound("Usuario no encontrado para la reserva.");
 
-                string nombreUsuario = usuario.Username;
+                var nombreUsuario = usuario.Username;
 
-                // Obtener MesaId (de la primera mesa asociada, si hay)
-                var mesaId = reserva.ReservaAsMesas.FirstOrDefault()?.MesaId ?? 0;
+                var mesaId = reserva.ReservaAsMesas?.FirstOrDefault()?.MesaId ?? 0;
+                Console.WriteLine($"Paso 3: MesaId = {mesaId}");
 
-                // Contenido para QR
                 var qrContenido = $"ReservaId:{reserva.ReservaId}|Usuario:{nombreUsuario}|Fecha:{reserva.FechaReserva:yyyy-MM-dd HH:mm}|Fecha final de la reseserva:{reserva.HoraFin:yyyy-MM-dd HH:mm}|MesaId:{mesaId}|Personas:{reserva.NumeroPersonas}";
 
-                // Generar QR
                 var qrBytes = QrService.GenerarQr(qrContenido);
-
-                // Generar PDF elegante
                 var pdfDoc = new ReservaPdf(qrContenido, qrBytes, nombreUsuario);
                 var pdfBytes = pdfDoc.GeneratePdf();
 
-                // Mensaje del correo
-                var mensaje = $"Tu reserva ha sido ha sido exitosa.<br>" +
+                var mensaje = $"Tu reserva ha sido exitosa.<br>" +
                               $"Fecha: {reserva.FechaReserva}<br>" +
-                              $"Horario de finalización { reserva.HoraFin}" + 
+                              $"Horario de finalización {reserva.HoraFin}<br>" +
                               $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
                               $"Estado: {reserva.Estado}";
 
-                // Crear notificación
                 var notificacion = await _notificacionService.CrearNotificacionAsync(reserva.UsuarioId, mensaje, "Reserva");
 
-                // Enviar correo con PDF
                 await _notificacionService.EnviarNotificacionAsync(notificacion, pdfBytes, $"reserva_{reserva.ReservaId}.pdf");
+
+                Console.WriteLine("Paso final: OK");
 
                 return Ok(reserva);
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
             catch (Exception ex)
             {
+                Console.WriteLine("ERROR INTERNO: " + ex.Message);
                 return StatusCode(500, ex.Message);
             }
         }
+
 
         [HttpPost("crear-multiples-mesas")]
         public async Task<IActionResult> CrearReservaConMultiplesMesas([FromBody] CrearReservaMultiplesMesasDTO dto)
