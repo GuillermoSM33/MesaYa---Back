@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MesaYa.Migrations
 {
     /// <inheritdoc />
-    public partial class RevokedTokenTable : Migration
+    public partial class cambios : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -186,6 +186,7 @@ namespace MesaYa.Migrations
                     FechaReserva = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Estado = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     NumeroPersonas = table.Column<int>(type: "int", nullable: false),
+                    HoraFin = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -210,6 +211,8 @@ namespace MesaYa.Migrations
                     Direccion = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     Telefono = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     ImagenUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HoraApertura = table.Column<TimeSpan>(type: "time", nullable: false),
+                    HoraCierre = table.Column<TimeSpan>(type: "time", nullable: false),
                     Horario = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Descripcion = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
@@ -294,6 +297,30 @@ namespace MesaYa.Migrations
                         principalTable: "Restaurantes",
                         principalColumn: "RestauranteId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RestaurantesFavoritos",
+                columns: table => new
+                {
+                    RestauranteId = table.Column<int>(type: "int", nullable: false),
+                    UsuarioId = table.Column<int>(type: "int", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RestaurantesFavoritos", x => new { x.UsuarioId, x.RestauranteId });
+                    table.ForeignKey(
+                        name: "FK_RestaurantesFavoritos_Restaurantes_RestauranteId",
+                        column: x => x.RestauranteId,
+                        principalTable: "Restaurantes",
+                        principalColumn: "RestauranteId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RestaurantesFavoritos_Usuarios_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId");
                 });
 
             migrationBuilder.CreateTable(
@@ -405,21 +432,21 @@ namespace MesaYa.Migrations
 
             migrationBuilder.InsertData(
                 table: "Reservas",
-                columns: new[] { "ReservaId", "CreatedAt", "Estado", "FechaReserva", "IsDeleted", "NumeroPersonas", "UsuarioId" },
+                columns: new[] { "ReservaId", "CreatedAt", "Estado", "FechaReserva", "HoraFin", "IsDeleted", "NumeroPersonas", "UsuarioId" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "pendiente", new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 2, 1 },
-                    { 2, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "confirmada", new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 4, 2 },
-                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "cancelada", new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified), false, 3, 3 }
+                    { 1, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "pendiente", new DateTime(2025, 3, 9, 12, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), false, 2, 1 },
+                    { 2, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "confirmada", new DateTime(2025, 3, 10, 12, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), false, 4, 2 },
+                    { 3, new DateTime(2025, 3, 8, 12, 0, 0, 0, DateTimeKind.Unspecified), "cancelada", new DateTime(2025, 3, 11, 12, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), false, 3, 3 }
                 });
 
             migrationBuilder.InsertData(
                 table: "Restaurantes",
-                columns: new[] { "RestauranteId", "Descripcion", "Direccion", "Horario", "ImagenUrl", "IsDeleted", "RestauranteNombre", "Telefono", "UsuarioId" },
+                columns: new[] { "RestauranteId", "Descripcion", "Direccion", "HoraApertura", "HoraCierre", "Horario", "ImagenUrl", "IsDeleted", "RestauranteNombre", "Telefono", "UsuarioId" },
                 values: new object[,]
                 {
-                    { 1, "Este reastureante sabe bien", "Calle 1", "sadsd", "Imagenreal", false, "Restaurante 1", "1234567890", 4 },
-                    { 2, "Este reastureante sabe bien", "Calle 2", "sadsd", "Imagenreal", false, "Restaurante 2", "0987654321", 2 }
+                    { 1, "Este reastureante sabe bien", "Calle 1", new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, 0), "sadsd", "Imagenreal", false, "Restaurante 1", "1234567890", 4 },
+                    { 2, "Este reastureante sabe bien", "Calle 2", new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, 0), "sadsd", "Imagenreal", false, "Restaurante 2", "0987654321", 2 }
                 });
 
             migrationBuilder.InsertData(
@@ -490,6 +517,11 @@ namespace MesaYa.Migrations
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RestaurantesFavoritos_RestauranteId",
+                table: "RestaurantesFavoritos",
+                column: "RestauranteId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Roles_RoleName",
                 table: "Roles",
                 column: "RoleName",
@@ -533,6 +565,9 @@ namespace MesaYa.Migrations
 
             migrationBuilder.DropTable(
                 name: "ReservaAsMesas");
+
+            migrationBuilder.DropTable(
+                name: "RestaurantesFavoritos");
 
             migrationBuilder.DropTable(
                 name: "RevokedTokens");

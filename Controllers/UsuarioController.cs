@@ -86,7 +86,21 @@ namespace MesaYa.Controllers
         {
             try
             {
-                var allUsers = await _context.Usuarios.ToListAsync();
+                var allUsers = await _context.Usuarios
+                    .Include(u => u.UsuarioAsRoles)
+                        .ThenInclude(uar => uar.Role)
+                    .Select(u => new
+                    {
+                        u.UsuarioId,
+                        u.Username,
+                        u.Email,
+                        u.PasswordHash,
+                        u.CreatedAt,
+                        u.IsDeleted,
+                        Roles = u.UsuarioAsRoles.Select(r => r.RoleId).ToList()
+                    })
+                    .ToListAsync();
+
                 return Ok(allUsers);
             }
             catch (Exception ex)

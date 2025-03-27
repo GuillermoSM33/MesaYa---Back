@@ -26,57 +26,16 @@ namespace MesaYa.Controllers
             _context = context;
         }
 
-
-        /*[HttpPost]
-        public async Task<IActionResult> CreateReserva([FromBody] CrearReservaDTO crearReservaDTO)
-        {
-            if (!ModelState.IsValid)  // Validar el DTO
-            {
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                var reserva = _reservaService.CreateReserva(crearReservaDTO);
-
-                // Crear la notificación
-                var mensaje = $"Tu reserva ha sido ha sido exitosa.<br>" +
-                    $"Fecha: {reserva.FechaReserva}<br>" +
-                    $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
-                    $"Estado: {reserva.Estado}";
-                    
-                var notificacion = await _notificacionService.CrearNotificacionAsync(reserva.UsuarioId, mensaje, "Reserva");
-
-                // Enviar la notificación por correo
-                await _notificacionService.EnviarNotificacionAsync(notificacion);
-                return Ok(reserva);  // Devuelve la reserva creada
-
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);  // Devuelve un 404 si la mesa o el usuario no existen
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);  // Devuelve un 400 si la reserva no es válida
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
-            }
-        }
-
-        */
-
         [HttpPost]
-        public async Task<IActionResult> CreateReserva([FromBody] CrearReservaDTO crearReservaDTO)
+        public async Task<IActionResult> CrearReservaAsync([FromBody] CrearReservaDTO crearReservaDTO)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                var reserva = _reservaService.CreateReserva(crearReservaDTO);
+                var reserva = await _reservaService.CrearReservaAsync(crearReservaDTO);
+
 
                 // Traer nombre del usuario desde la base de datos
                 var usuario = await _context.Usuarios
@@ -91,7 +50,7 @@ namespace MesaYa.Controllers
                 var mesaId = reserva.ReservaAsMesas.FirstOrDefault()?.MesaId ?? 0;
 
                 // Contenido para QR
-                var qrContenido = $"ReservaId:{reserva.ReservaId}|Usuario:{nombreUsuario}|Fecha:{reserva.FechaReserva:yyyy-MM-dd HH:mm}|MesaId:{mesaId}|Personas:{reserva.NumeroPersonas}";
+                var qrContenido = $"ReservaId:{reserva.ReservaId}|Usuario:{nombreUsuario}|Fecha:{reserva.FechaReserva:yyyy-MM-dd HH:mm}|Fecha final de la reseserva:{reserva.HoraFin:yyyy-MM-dd HH:mm}|MesaId:{mesaId}|Personas:{reserva.NumeroPersonas}";
 
                 // Generar QR
                 var qrBytes = QrService.GenerarQr(qrContenido);
@@ -103,6 +62,7 @@ namespace MesaYa.Controllers
                 // Mensaje del correo
                 var mensaje = $"Tu reserva ha sido ha sido exitosa.<br>" +
                               $"Fecha: {reserva.FechaReserva}<br>" +
+                              $"Horario de finalización { reserva.HoraFin}" + 
                               $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
                               $"Estado: {reserva.Estado}";
 
@@ -154,21 +114,183 @@ namespace MesaYa.Controllers
         }
 
 
-        [HttpPatch("{reservaId}/cancelar")]
-        public IActionResult CancelarReserva(int reservaId)
+        [HttpPut("confirmar/{reservaId}")]
+        public async Task<IActionResult> ConfirmarReserva(int reservaId)
         {
             try
             {
-                _reservaService.CancelarReserva(reservaId);  // Llama al servicio para cancelar la reserva
-                return Ok(new { Message = "Reserva cancelada exitosamente." });  // Devuelve un mensaje de éxito
+                var reserva = await _reservaService.ConfirmarReservaAsync(reservaId);
+
+                // Obtener nombre del usuario
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.UsuarioId == reserva.UsuarioId);
+
+                if (usuario == null)
+                    return NotFound("Usuario no encontrado para la reserva.");
+
+                string nombreUsuario = usuario.Username;
+
+                // Obtener mesaId (de la primera mesa asociada)
+                var mesaId = reserva.ReservaAsMesas.FirstOrDefault()?.MesaId ?? 0;
+
+                // Mensaje del correo
+                var mensaje = $"Tu reserva ha sido <strong>confirmada</strong>.<br>" +
+                              $"Fecha: {reserva.FechaReserva:dd/MM/yyyy HH:mm}<br>" +
+                              $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
+                              $"Estado: {reserva.Estado}<br>" +
+                              $"Tienes 15 minutos de tolerancia, después de eso la reserva podrá ser cancelada automáticamente.";
+
+                // Contenido del QR
+                var qrContenido = $"ReservaId:{reserva.ReservaId}|Usuario:{nombreUsuario}|Fecha:{reserva.FechaReserva:yyyy-MM-dd HH:mm}|FechaFin:{reserva.HoraFin:yyyy-MM-dd HH:mm}|MesaId:{mesaId}|Personas:{reserva.NumeroPersonas}";
+
+                // Generar QR
+                var qrBytes = QrService.GenerarQr(qrContenido);
+
+                // Generar PDF con aviso de tolerancia
+                var pdfMensaje = $"Reserva Confirmada\n\n" +
+                                 $"Usuario: {nombreUsuario}\n" +
+                                 $"Reserva ID: {reserva.ReservaId}\n" +
+                                 $"Fecha: {reserva.FechaReserva:dd/MM/yyyy HH:mm}\n" +
+                                 $"Hora Fin: {reserva.HoraFin:HH:mm}\n" +
+                                 $"Mesa: {mesaId}\n" +
+                                 $"Personas: {reserva.NumeroPersonas}\n\n" +
+                                 $"**Tienes 15 minutos de tolerancia, de lo contrario se cancelará la reserva.**";
+
+                var pdfDoc = new ReservaPdf(pdfMensaje, qrBytes, nombreUsuario);
+                var pdfBytes = pdfDoc.GeneratePdf();
+
+                // Crear y enviar notificación
+                var notificacion = await _notificacionService.CrearNotificacionAsync(reserva.UsuarioId, mensaje, "Reserva Confirmada");
+                await _notificacionService.EnviarNotificacionAsync(notificacion, pdfBytes, $"reserva_confirmada_{reserva.ReservaId}.pdf");
+
+                return Ok(reserva);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ex.Message);  // Devuelve un 404 si la reserva no existe o ya está cancelada
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);  // Devuelve un 500 en caso de error inesperado
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("finalizar/{reservaId}")]
+        public async Task<IActionResult> FinalizarReserva(int reservaId)
+        {
+            try
+            {
+                var reserva = await _reservaService.FinalizarReservaAsync(reservaId);
+
+                return Ok(new { mensaje = "Reserva finalizada exitosamente.", reserva });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+
+
+        [HttpPut("cancelar/{reservaId}")]
+        public async Task<IActionResult> CancelarReserva(int reservaId)
+        {
+            try
+            {
+                var reserva = await _reservaService.CancelarReservaAsync(reservaId);
+
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.UsuarioId == reserva.UsuarioId);
+                if (usuario == null)
+                    return NotFound("Usuario no encontrado.");
+
+                var nombreUsuario = usuario.Username;
+
+                // Construir mensaje
+                var mensaje = $"Tu reserva ha sido <strong>cancelada</strong>.<br>" +
+                              $"Fecha original: {reserva.FechaReserva:dd/MM/yyyy HH:mm}<br>" +
+                              $"Capacidad: {reserva.NumeroPersonas} personas<br>" +
+                              $"Estado: {reserva.Estado}";
+
+                // Generar contenido del QR
+                var qrContenido = $"ReservaId:{reserva.ReservaId}|Usuario:{nombreUsuario}|Fecha:{reserva.FechaReserva:yyyy-MM-dd HH:mm}|Estado:Cancelada";
+
+                var qrBytes = QrService.GenerarQr(qrContenido);
+
+                // Generar PDF con el mensaje de cancelación
+                var pdfMensaje = $"Reserva Cancelada\n\n" +
+                                 $"Usuario: {nombreUsuario}\n" +
+                                 $"Reserva ID: {reserva.ReservaId}\n" +
+                                 $"Fecha original: {reserva.FechaReserva:dd/MM/yyyy HH:mm}\n" +
+                                 $"Personas: {reserva.NumeroPersonas}\n\n" +
+                                 $"Si tienes dudas, comunícate con el restaurante.";
+
+                var pdfDoc = new ReservaPdf(pdfMensaje, qrBytes, nombreUsuario);
+                var pdfBytes = pdfDoc.GeneratePdf();
+
+                // Crear notificación y enviar
+                var notificacion = await _notificacionService.CrearNotificacionAsync(reserva.UsuarioId, mensaje, "Reserva Cancelada");
+                await _notificacionService.EnviarNotificacionAsync(notificacion, pdfBytes, $"reserva_cancelada_{reserva.ReservaId}.pdf");
+
+                return Ok(new { mensaje = "Reserva cancelada y correo enviado.", reserva });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+        [HttpGet("disponibilidad")]
+        public IActionResult ObtenerHorasDisponibles([FromQuery] int mesaId, [FromQuery] DateTime fecha)
+        {
+            try
+            {
+                var horas = _reservaService.ObtenerHorasDisponibles(mesaId, fecha);
+                return Ok(horas);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error al obtener horas disponibles: " + ex.Message);
+            }
+        }
+
+        [HttpGet("restaurante/{restauranteId}")]
+        public async Task<IActionResult> GetReservasByRestaurante(int restauranteId)
+        {
+            try
+            {
+                var reservas = await _reservaService.GetReservasByRestauranteAsync(restauranteId);
+                return Ok(reservas);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
         }
 

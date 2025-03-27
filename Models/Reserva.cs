@@ -20,6 +20,10 @@ namespace MesaYa.Models
 
         [Required]
         public int NumeroPersonas { get; set; }
+
+        
+        [Required]
+        public DateTime HoraFin { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsDeleted { get; set; } = false;
 
