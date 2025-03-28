@@ -24,8 +24,7 @@ namespace MesaYa.Models
            //  _validadorHorarios = new ValidadorHorariosReserva(context);
         }
 
-
-        /*public async Task<Reserva> CrearReservaAsync(CrearReservaDTO dto)
+        public async Task<Reserva> CrearReservaAsync(CrearReservaDTO dto)
         {
             var mesa = await _context.Mesa
                 .Include(m => m.Restaurante)
@@ -83,7 +82,8 @@ namespace MesaYa.Models
 
             return reserva;
         }
-        */
+
+        /*
         public async Task<Reserva> CrearReservaAsync(CrearReservaDTO dto)
         {
             var mesa = await _context.Mesa
@@ -148,6 +148,8 @@ namespace MesaYa.Models
 
             return reserva;
         }
+
+        */
         public async Task<Reserva> ConfirmarReservaAsync(int reservaId)
         {
             var reserva = await _context.Reservas
@@ -220,7 +222,7 @@ namespace MesaYa.Models
             }
         }
 
-        public List<string> ObtenerHorasDisponibles(int mesaId, DateTime fecha)
+        /*public List<string> ObtenerHorasDisponibles(int mesaId, DateTime fecha)
         {
             var mesa = _context.Mesa
                 .Include(m => m.Restaurante)
@@ -264,6 +266,64 @@ namespace MesaYa.Models
 
             return horasDisponibles;
         }
+
+        */
+
+        public List<string> ObtenerHorasDisponibles(int mesaId, DateTime fecha)
+        {
+            var mesa = _context.Mesa
+                .Include(m => m.Restaurante)
+                .FirstOrDefault(m => m.MesaId == mesaId && !m.IsDeleted)
+                ?? throw new KeyNotFoundException("La mesa no existe.");
+
+            var restaurante = mesa.Restaurante
+                ?? throw new InvalidOperationException("El restaurante asociado no existe.");
+
+            // Obtener reservas existentes para esa mesa en la fecha especificada
+            var reservas = _context.ReservaAsMesas
+                .Include(rm => rm.Reserva)
+                .Where(rm => rm.MesaId == mesaId &&
+                             !rm.Reserva.IsDeleted &&
+                             rm.Reserva.FechaReserva.Date == fecha.Date)
+                .Select(rm => rm.Reserva)
+                .ToList();
+
+            var horasDisponibles = new List<string>();
+            var intervalo = TimeSpan.FromMinutes(30);
+
+            // Convertimos la fecha y horas de apertura/cierre en DateTime
+            var horaApertura = fecha.Date + restaurante.HoraApertura;
+            var horaCierre = fecha.Date + restaurante.HoraCierre;
+
+            // Opcional: si 00:00 significa "medianoche del día siguiente", ajusta así:
+            /*
+            if (restaurante.HoraCierre == TimeSpan.Zero)
+            {
+                horaCierre = horaCierre.AddHours(24); 
+            }
+            */
+
+            // Generamos intervalos de 2 horas (porque cada reserva dura 2 horas)
+            for (var hora = horaApertura; hora.AddHours(2) <= horaCierre; hora = hora.Add(intervalo))
+            {
+                var horaFin = hora.AddHours(2);
+
+                // Revisamos si hay conflicto con reservas existentes
+                bool conflicto = reservas.Any(r =>
+                    (hora >= r.FechaReserva && hora < r.HoraFin) ||
+                    (horaFin > r.FechaReserva && horaFin <= r.HoraFin) ||
+                    (hora <= r.FechaReserva && horaFin >= r.HoraFin));
+
+                // Si NO hay conflicto, lo agregamos como disponible
+                if (!conflicto)
+                {
+                    horasDisponibles.Add(hora.ToString("HH:mm")); // 24h format
+                }
+            }
+
+            return horasDisponibles;
+        }
+
         public async Task<Reserva> AceptarReserva(int reservaId)
         {
             var reserva = await _context.Reservas
