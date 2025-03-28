@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MesaYa.Migrations
 {
     /// <inheritdoc />
-    public partial class cambios : Migration
+    public partial class UpdateHoraAperturaAndHoraCierreToTimeSpan : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -445,8 +445,8 @@ namespace MesaYa.Migrations
                 columns: new[] { "RestauranteId", "Descripcion", "Direccion", "HoraApertura", "HoraCierre", "Horario", "ImagenUrl", "IsDeleted", "RestauranteNombre", "Telefono", "UsuarioId" },
                 values: new object[,]
                 {
-                    { 1, "Este reastureante sabe bien", "Calle 1", new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, 0), "sadsd", "Imagenreal", false, "Restaurante 1", "1234567890", 4 },
-                    { 2, "Este reastureante sabe bien", "Calle 2", new TimeSpan(0, 0, 0, 0, 0), new TimeSpan(0, 0, 0, 0, 0), "sadsd", "Imagenreal", false, "Restaurante 2", "0987654321", 2 }
+                    { 1, "Este restaurante sabe bien", "Calle 1", new TimeSpan(0, 15, 0, 0, 0), new TimeSpan(0, 0, 0, 0, 0), "Tarde-Noche", "Imagenreal", false, "Restaurante 1", "1234567890", 4 },
+                    { 2, "Este restaurante sabe bien", "Calle 2", new TimeSpan(0, 15, 0, 0, 0), new TimeSpan(0, 0, 0, 0, 0), "Tarde-Noche", "Imagenreal", false, "Restaurante 2", "0987654321", 2 }
                 });
 
             migrationBuilder.InsertData(

@@ -145,9 +145,36 @@ namespace MesaYa.Data
             );
 
             // Seed para Restaurantes: 2 registros
+            //El horario será de 3pm a 12am
             modelBuilder.Entity<Restaurante>().HasData(
-                new Restaurante { RestauranteId = 1,UsuarioId = 4, RestauranteNombre = "Restaurante 1", Direccion = "Calle 1", Telefono = "1234567890",ImagenUrl="Imagenreal", Horario="sadsd",Descripcion= "Este reastureante sabe bien", IsDeleted = false },
-                new Restaurante { RestauranteId = 2,UsuarioId = 2, RestauranteNombre = "Restaurante 2", Direccion = "Calle 2", Telefono = "0987654321", ImagenUrl = "Imagenreal", Horario = "sadsd", Descripcion = "Este reastureante sabe bien", IsDeleted = false }
+                new Restaurante
+                {
+                    RestauranteId = 1,
+                    UsuarioId = 4,
+                    RestauranteNombre = "Restaurante 1",
+                    Direccion = "Calle 1",
+                    Telefono = "1234567890",
+                    ImagenUrl = "Imagenreal",
+                    HoraApertura = new TimeSpan(15, 0, 0), // 3:00 PM
+                    HoraCierre = new TimeSpan(0, 0, 0),    // 12:00 AM
+                    Horario = "Tarde-Noche",             
+                    Descripcion = "Este restaurante sabe bien",
+                    IsDeleted = false
+                },
+                new Restaurante
+                {
+                    RestauranteId = 2,
+                    UsuarioId = 2,
+                    RestauranteNombre = "Restaurante 2",
+                    Direccion = "Calle 2",
+                    Telefono = "0987654321",
+                    ImagenUrl = "Imagenreal",
+                    HoraApertura = new TimeSpan(15, 0, 0),
+                    HoraCierre = new TimeSpan(0, 0, 0),
+                    Horario = "Tarde-Noche",              
+                    Descripcion = "Este restaurante sabe bien",
+                    IsDeleted = false
+                }
             );
 
             //seed para Mesas: 3 registros

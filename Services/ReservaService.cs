@@ -25,7 +25,7 @@ namespace MesaYa.Models
         }
 
 
-        public async Task<Reserva> CrearReservaAsync(CrearReservaDTO dto)
+        /*public async Task<Reserva> CrearReservaAsync(CrearReservaDTO dto)
         {
             var mesa = await _context.Mesa
                 .Include(m => m.Restaurante)
@@ -83,9 +83,71 @@ namespace MesaYa.Models
 
             return reserva;
         }
+        */
+        public async Task<Reserva> CrearReservaAsync(CrearReservaDTO dto)
+        {
+            var mesa = await _context.Mesa
+                .Include(m => m.Restaurante)
+                .FirstOrDefaultAsync(m => m.MesaId == dto.MesaId && !m.IsDeleted);
 
+            if (mesa == null)
+                throw new KeyNotFoundException("La mesa no existe.");
 
+            if (mesa.Restaurante == null)
+                throw new InvalidOperationException("El restaurante asociado no existe.");
 
+            var horaInicio = dto.HoraInicio.TimeOfDay;
+            var horaFin = dto.HoraFin.TimeOfDay;
+
+            var apertura = mesa.Restaurante.HoraApertura;
+            var cierre = mesa.Restaurante.HoraCierre;
+
+            // Ajustar el cierre si es igual a medianoche (00:00), interpretarlo como 24:00
+            if (cierre == TimeSpan.Zero)
+                cierre = TimeSpan.FromHours(24);
+
+            if (horaInicio < apertura || horaFin > cierre)
+                throw new InvalidOperationException("La hora solicitada está fuera del horario del restaurante.");
+
+            var reservas = await _context.ReservaAsMesas
+                .Include(rm => rm.Reserva)
+                .Where(rm => rm.MesaId == dto.MesaId &&
+                             !rm.Reserva.IsDeleted &&
+                             rm.Reserva.FechaReserva.Date == dto.HoraInicio.Date)
+                .ToListAsync();
+
+            bool conflicto = reservas.Any(r =>
+                (dto.HoraInicio >= r.Reserva.FechaReserva && dto.HoraInicio < r.Reserva.HoraFin) ||
+                (dto.HoraFin > r.Reserva.FechaReserva && dto.HoraFin <= r.Reserva.HoraFin) ||
+                (dto.HoraInicio <= r.Reserva.FechaReserva && dto.HoraFin >= r.Reserva.HoraFin));
+
+            if (conflicto)
+                throw new InvalidOperationException("La hora seleccionada ya está reservada para esta mesa.");
+
+            var reserva = new Reserva
+            {
+                UsuarioId = dto.UsuarioId,
+                FechaReserva = dto.HoraInicio,
+                HoraFin = dto.HoraFin,
+                NumeroPersonas = dto.NumeroPersonas,
+                Estado = "Pendiente",
+                IsDeleted = false
+            };
+
+            _context.Reservas.Add(reserva);
+            await _context.SaveChangesAsync();
+
+            var reservaMesa = new ReservaAsMesa
+            {
+                MesaId = dto.MesaId,
+                ReservaId = reserva.ReservaId
+            };
+
+            _context.ReservaAsMesas.Add(reservaMesa);
+            await _context.SaveChangesAsync();
+
+            return reserva;
+        }
         public async Task<Reserva> ConfirmarReservaAsync(int reservaId)
         {
             var reserva = await _context.Reservas
@@ -103,10 +165,6 @@ namespace MesaYa.Models
 
             return reserva;
         }
-
-
-
-
         public Reserva CreateReservaConMultiplesMesas(CrearReservaMultiplesMesasDTO dto)
         {
             using (var transaction = _context.Database.BeginTransaction())
@@ -206,8 +264,6 @@ namespace MesaYa.Models
 
             return horasDisponibles;
         }
-
-
         public async Task<Reserva> AceptarReserva(int reservaId)
         {
             var reserva = await _context.Reservas

@@ -13,10 +13,10 @@ namespace MesaYa.Document
         private readonly byte[] _qrBytes;
         private readonly string _nombreUsuario;
 
-        public ReservaPdf(string contenido, byte[] qrBytes, string nombreUsuario)
+        public ReservaPdf(string contenido, /*byte[] qrBytes,*/ string nombreUsuario)
         {
             _contenido = contenido;
-            _qrBytes = qrBytes;
+            //_qrBytes = qrBytes;
             _nombreUsuario = nombreUsuario;
         }
 
@@ -31,7 +31,9 @@ namespace MesaYa.Document
                 page.DefaultTextStyle(x => x.FontFamily("Helvetica"));
 
                 page.Header().Element(container => ComposeHeader(container));
+
                 page.Content().Element(container => ComposeContent(container));
+
                 page.Footer().AlignCenter().Text(txt =>
                 {
                     txt.Span("MesaYa © ").FontColor(Colors.Grey.Lighten1);
@@ -64,10 +66,9 @@ namespace MesaYa.Document
 
                 column.Item().Element(ComposeDetails);
 
-                column.Item().AlignCenter().Element(ComposeQr);
-
-                column.Item().AlignCenter().Text("Escanea el código QR para verificar tu reserva")
-                    .FontSize(10).Italic().FontColor(Colors.Grey.Medium);
+                // column.Item().AlignCenter().Element(ComposeQr);
+                // column.Item().AlignCenter().Text("Escanea el código QR para verificar tu reserva")
+                //     .FontSize(10).Italic().FontColor(Colors.Grey.Medium);
             });
         }
 
@@ -96,7 +97,7 @@ namespace MesaYa.Document
             });
         }
 
-        private void ComposeQr(IContainer container)
+        /*private void ComposeQr(IContainer container)
         {
             container.Border(1)
                      .BorderColor(Colors.Grey.Lighten2)
@@ -106,6 +107,7 @@ namespace MesaYa.Document
                      .AlignMiddle()
                      .Image(new MemoryStream(_qrBytes), ImageScaling.FitHeight);
         }
+        */
 
         private string ExtraerValor(string clave)
         {

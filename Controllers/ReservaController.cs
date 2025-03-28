@@ -51,7 +51,7 @@ namespace MesaYa.Controllers
                 var qrContenido = $"ReservaId:{reserva.ReservaId}|Usuario:{nombreUsuario}|Fecha:{reserva.FechaReserva:yyyy-MM-dd HH:mm}|Fecha final de la reseserva:{reserva.HoraFin:yyyy-MM-dd HH:mm}|MesaId:{mesaId}|Personas:{reserva.NumeroPersonas}";
 
                 var qrBytes = QrService.GenerarQr(qrContenido);
-                var pdfDoc = new ReservaPdf(qrContenido, qrBytes, nombreUsuario);
+                var pdfDoc = new ReservaPdf(qrContenido, /*qrBytes,*/ nombreUsuario);
                 var pdfBytes = pdfDoc.GeneratePdf();
 
                 var mensaje = $"Tu reserva ha sido exitosa.<br>" +
@@ -144,7 +144,7 @@ namespace MesaYa.Controllers
                                  $"Personas: {reserva.NumeroPersonas}\n\n" +
                                  $"**Tienes 15 minutos de tolerancia, de lo contrario se cancelará la reserva.**";
 
-                var pdfDoc = new ReservaPdf(pdfMensaje, qrBytes, nombreUsuario);
+                var pdfDoc = new ReservaPdf(pdfMensaje, /*qrBytes,*/ nombreUsuario);
                 var pdfBytes = pdfDoc.GeneratePdf();
 
                 // Crear y enviar notificación
@@ -222,7 +222,7 @@ namespace MesaYa.Controllers
                                  $"Personas: {reserva.NumeroPersonas}\n\n" +
                                  $"Si tienes dudas, comunícate con el restaurante.";
 
-                var pdfDoc = new ReservaPdf(pdfMensaje, qrBytes, nombreUsuario);
+                var pdfDoc = new ReservaPdf(pdfMensaje, /*qrBytes,*/ nombreUsuario);
                 var pdfBytes = pdfDoc.GeneratePdf();
 
                 // Crear notificación y enviar

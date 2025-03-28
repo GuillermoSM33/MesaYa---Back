@@ -629,11 +629,11 @@ namespace MesaYa.Migrations
                         new
                         {
                             RestauranteId = 1,
-                            Descripcion = "Este reastureante sabe bien",
+                            Descripcion = "Este restaurante sabe bien",
                             Direccion = "Calle 1",
-                            HoraApertura = new TimeSpan(0, 0, 0, 0, 0),
+                            HoraApertura = new TimeSpan(0, 15, 0, 0, 0),
                             HoraCierre = new TimeSpan(0, 0, 0, 0, 0),
-                            Horario = "sadsd",
+                            Horario = "Tarde-Noche",
                             ImagenUrl = "Imagenreal",
                             IsDeleted = false,
                             RestauranteNombre = "Restaurante 1",
@@ -643,11 +643,11 @@ namespace MesaYa.Migrations
                         new
                         {
                             RestauranteId = 2,
-                            Descripcion = "Este reastureante sabe bien",
+                            Descripcion = "Este restaurante sabe bien",
                             Direccion = "Calle 2",
-                            HoraApertura = new TimeSpan(0, 0, 0, 0, 0),
+                            HoraApertura = new TimeSpan(0, 15, 0, 0, 0),
                             HoraCierre = new TimeSpan(0, 0, 0, 0, 0),
-                            Horario = "sadsd",
+                            Horario = "Tarde-Noche",
                             ImagenUrl = "Imagenreal",
                             IsDeleted = false,
                             RestauranteNombre = "Restaurante 2",
