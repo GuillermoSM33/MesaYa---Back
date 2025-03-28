@@ -147,8 +147,13 @@ namespace MesaYa.Controllers
                 // Actualizar datos del usuario
                 userToEdit.Username = userDto.Username;
                 userToEdit.Email = userDto.Email;
-                userToEdit.PasswordHash = userDto.PasswordHash;
                 userToEdit.IsDeleted = userDto.IsDeleted;
+
+                // Solo si el usuario envía un password distinto de vacío, lo actualizamos hasheado
+                if (!string.IsNullOrWhiteSpace(userDto.Password))
+                {
+                    userToEdit.PasswordHash = _usuarioServices.HashPassword(userDto.Password);
+                }
 
                 // Actualizar roles
                 userToEdit.UsuarioAsRoles.Clear();

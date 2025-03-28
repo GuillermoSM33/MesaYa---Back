@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Threading.Tasks;
 
 namespace MesaYa.Controllers
 {
@@ -28,7 +30,7 @@ namespace MesaYa.Controllers
         {
             public string Email { get; set; }
             public string Password { get; set; }
-            public string Recaptcha { get; set; }
+            public string RecaptchaToken { get; set; }
         }
 
         /*[HttpPost("login")]
@@ -52,7 +54,7 @@ namespace MesaYa.Controllers
         }*/
 
         [HttpPost("login")]
-        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login ([FromBody] LoginRequest request)
         {
             if (request == null)
             {
@@ -65,7 +67,7 @@ namespace MesaYa.Controllers
 
             }
 
-            bool isCaptchaValid = await _recaptchaValidator.ValidateAsync(request.Recaptcha);
+            bool isCaptchaValid = await _recaptchaValidator.ValidateAsync(request.RecaptchaToken);
             if (!isCaptchaValid)
             {
                 return BadRequest(new { message = "reCAPTCHA inválido" });
@@ -92,7 +94,7 @@ namespace MesaYa.Controllers
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-          
+
             var authHeader = Request.Headers["Authorization"].ToString();
             if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
             {
