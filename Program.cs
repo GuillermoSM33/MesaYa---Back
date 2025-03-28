@@ -42,6 +42,10 @@ builder.Services.Configure<SendGridSettings>(options =>
     options.FromName = Environment.GetEnvironmentVariable("SENDGRID_FROM_NAME");
 });
 
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IRecaptchaValidator, RecaptchaService>();
+
+
 
 builder.Services.AddEndpointsApiExplorer();
 

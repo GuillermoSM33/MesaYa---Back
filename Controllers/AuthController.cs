@@ -16,16 +16,19 @@ namespace MesaYa.Controllers
         private readonly IAuthService _authService;
 
         private readonly ApplicationDbContext _context;
+        private readonly IRecaptchaValidator _recaptchaValidator;
 
-        public AuthController(IAuthService authService, ApplicationDbContext context)
+        public AuthController(IAuthService authService, ApplicationDbContext context, IRecaptchaValidator recaptchaValidator)
         {
             _authService = authService;
             _context = context;
+            _recaptchaValidator = recaptchaValidator;
         }
         public class LoginRequest
         {
             public string Email { get; set; }
             public string Password { get; set; }
+            public string Recaptcha { get; set; }
         }
 
         /*[HttpPost("login")]
@@ -49,7 +52,7 @@ namespace MesaYa.Controllers
         }*/
 
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
         {
             if (request == null)
             {
@@ -59,6 +62,13 @@ namespace MesaYa.Controllers
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return BadRequest(new { message = "Correo y contraseña son obligatorios." });
+
+            }
+
+            bool isCaptchaValid = await _recaptchaValidator.ValidateAsync(request.Recaptcha);
+            if (!isCaptchaValid)
+            {
+                return BadRequest(new { message = "reCAPTCHA inválido" });
             }
 
             var user = _authService.ValidateUser(request.Email, request.Password);
